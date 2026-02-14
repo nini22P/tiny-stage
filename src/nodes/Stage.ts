@@ -19,12 +19,15 @@ export class Stage extends BaseNode {
       type: 'stage',
       id: 'root',
       tween: {
+        ...config.tween,
         x: 0,
         y: 0,
         width: config.width,
         height: config.height,
         overflow: 'hidden',
         userSelect: 'none',
+        position: 'absolute',
+        transformOrigin: 'top left',
       }
     })
 
@@ -39,7 +42,8 @@ export class Stage extends BaseNode {
     })
 
     this.config = config
-    this.setupStage()
+    this.config.container.appendChild(this.element)
+
     this.updateLayout()
 
     this.resizeObserver = new ResizeObserver(() => {
@@ -55,12 +59,6 @@ export class Stage extends BaseNode {
 
     this.emit('stageCreated', this)
     Logger.info('Stage initialized successfully')
-  }
-
-  private setupStage(): void {
-    this.element.style.position = 'absolute'
-    this.element.style.transformOrigin = 'top left'
-    this.config.container.appendChild(this.element)
   }
 
   private updateLayout(): void {

@@ -7,22 +7,27 @@ export type Tween = gsap.TweenVars
 export interface BaseNodeProps {
   type?: string;
   id: string;
+  tagName?: keyof HTMLElementTagNameMap,
   tween?: Tween;
 }
 
-export class BaseNode extends EventEmitter {
-  public element: HTMLElement
+export class BaseNode<T extends HTMLElement = HTMLElement> extends EventEmitter {
+  public element: T
   public id: string
 
   private animationCount = 0
   private isDestroyed = false
 
-  constructor({ type = 'base', id, tween }: BaseNodeProps) {
+  constructor({ type = 'base', id, tagName = 'div', tween }: BaseNodeProps) {
     super()
     this.id = id
-    this.element = this.createElement()
+    this.element = document.createElement(tagName) as T
     this.element.id = `${type}:${id}`
     this.element.style.position = 'absolute'
+    this.element.style.display = 'block'
+    this.element.style.boxSizing = 'border-box'
+    this.element.style.margin = '0'
+    this.element.style.padding = '0'
 
     Logger.debug(`Node created: ${type}:${id}`)
 
@@ -108,10 +113,6 @@ export class BaseNode extends EventEmitter {
       this.animationCount = 0
       this.element.style.willChange = 'auto'
     }
-  }
-
-  protected createElement(): HTMLElement {
-    return document.createElement('div')
   }
 
   public destroy(): void {
