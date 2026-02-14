@@ -1,6 +1,6 @@
 import gsap from 'gsap'
 import { Logger, LogLevel } from '../utils/Logger'
-import { BaseNode, type BaseNodeProps } from './BaseNode'
+import { BaseNode, type BaseNodeEvents, type BaseNodeProps } from './BaseNode'
 
 export interface StageConfig extends Omit<BaseNodeProps, 'id' | 'type'> {
   container: HTMLElement;
@@ -9,7 +9,14 @@ export interface StageConfig extends Omit<BaseNodeProps, 'id' | 'type'> {
   debug?: boolean;
 }
 
-export class Stage extends BaseNode {
+export type StageEvents = BaseNodeEvents & {
+  stageCreated: [Stage];
+  stageDestroying: [Stage];
+  stageDestroyed: [Stage];
+  layoutUpdated: [{ scale: number; offsetX: number; offsetY: number }];
+};
+
+export class Stage extends BaseNode<HTMLElement, StageEvents> {
   private config: StageConfig
   private resizeObserver: ResizeObserver
   private resizeTimer: number | null = null
@@ -58,7 +65,7 @@ export class Stage extends BaseNode {
     this.resizeObserver.observe(config.container)
 
     this.emit('stageCreated', this)
-    Logger.info('Stage initialized successfully')
+    Logger.info('Stage created successfully')
   }
 
   private updateLayout(): void {
@@ -88,8 +95,8 @@ export class Stage extends BaseNode {
   }
 
   public destroy(): void {
-    this.emit('beforeDestroy', this)
-    Logger.info('Destroying stage...')
+    this.emit('stageDestroying', this)
+    Logger.info('Stage destroying...')
 
     if (this.resizeTimer !== null) {
       cancelAnimationFrame(this.resizeTimer)
@@ -100,6 +107,7 @@ export class Stage extends BaseNode {
 
     super.destroy()
 
+    this.emit('stageDestroyed', this)
     Logger.info('Stage destroyed')
   }
 }

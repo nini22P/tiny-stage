@@ -1,49 +1,55 @@
-export type EventCallback = (...args: unknown[]) => void
+export type EventMap = Record<string, unknown[]>;
 
-export class EventEmitter {
-  private events = new Map<string, Set<EventCallback>>()
+export type EventCallback<T extends unknown[]> = (...args: T) => void;
 
-  on(event: string, callback: EventCallback): () => void {
+export class EventEmitter<T extends EventMap = EventMap> {
+  private events = new Map<keyof T, Set<EventCallback<never[]>>>()
+
+  public on<K extends keyof T>(event: K, callback: EventCallback<T[K]>): () => void {
     if (!this.events.has(event)) {
       this.events.set(event, new Set())
     }
-    this.events.get(event)!.add(callback)
-
+    this.events.get(event)!.add(callback as unknown as EventCallback<never[]>)
     return () => this.off(event, callback)
   }
 
-  once(event: string, callback: EventCallback): () => void {
-    const wrappedCallback = (...args: unknown[]) => {
+  public once<K extends keyof T>(event: K, callback: EventCallback<T[K]>): () => void {
+    const wrappedCallback = (...args: T[K]) => {
       callback(...args)
-      this.off(event, wrappedCallback)
+      this.off(event, wrappedCallback as unknown as EventCallback<T[K]>)
     }
-    return this.on(event, wrappedCallback)
+    return this.on(event, wrappedCallback as unknown as EventCallback<T[K]>)
   }
 
-  off(event: string, callback: EventCallback): void {
-    this.events.get(event)?.delete(callback)
+  public off<K extends keyof T>(event: K, callback: EventCallback<T[K]>): void {
+    const listeners = this.events.get(event)
+    if (listeners) {
+      listeners.delete(callback as unknown as EventCallback<never[]>)
+      if (listeners.size === 0) {
+        this.events.delete(event)
+      }
+    }
   }
 
-  emit(event: string, ...args: unknown[]): void {
+  public emit<K extends keyof T>(event: K, ...args: T[K]): void {
     this.events.get(event)?.forEach(cb => {
       try {
-        cb(...args)
+        (cb as unknown as EventCallback<T[K]>)(...args)
       } catch (error) {
-        console.error(`[EventEmitter] Error in event handler for "${event}":`, error)
+        console.error(`[Event Emitter] Error in handler for "${String(event)}":`, error)
       }
     })
   }
 
-  clear(): void {
-    this.events.clear()
-  }
-
-  clearEvent(event: string): void {
+  public clearEvent<K extends keyof T>(event: K): void {
     this.events.delete(event)
   }
 
-  listenerCount(event: string): number {
+  public clear(): void {
+    this.events.clear()
+  }
+
+  public listenerCount<K extends keyof T>(event: K): number {
     return this.events.get(event)?.size ?? 0
   }
 }
-

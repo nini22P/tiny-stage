@@ -11,7 +11,14 @@ export interface BaseNodeProps {
   tween?: Tween;
 }
 
-export class BaseNode<T extends HTMLElement = HTMLElement> extends EventEmitter {
+export type BaseNodeEvents = {
+  nodeCreated: [BaseNode];
+  nodeDestroyed: [BaseNode];
+  tweenSet: [gsap.TweenVars];
+  tweenTo: [gsap.TweenVars];
+}
+
+export class BaseNode<T extends HTMLElement = HTMLElement, E extends BaseNodeEvents = BaseNodeEvents> extends EventEmitter<E> {
   public element: T
   public id: string
 
@@ -29,73 +36,65 @@ export class BaseNode<T extends HTMLElement = HTMLElement> extends EventEmitter 
     this.element.style.margin = '0'
     this.element.style.padding = '0'
 
-    Logger.debug(`Node created: ${type}:${id}`)
-
     if (tween) {
       this.set(tween)
     }
+
+    this.emit('nodeCreated', this as BaseNode)
+    Logger.debug(`Node created: ${this.element.id}`)
   }
 
   public set(tween: Tween): this {
     if (this.isDestroyed) {
-      Logger.warn(`Attempting to set destroyed node: ${this.id}`)
+      Logger.warn(`Attempting to set destroyed node: ${this.element.id}`)
       return this
     }
 
-    this.emit('beforeUpdate', tween)
+    this.emit('tweenSet', tween)
+    Logger.debug(`Tween set: ${this.element.id}`, tween)
 
     gsap.set(this.element, tween)
-
-    this.emit('afterUpdate', tween)
-    Logger.debug(`Node set: ${this.id}`, tween)
 
     return this
   }
 
   public to(tween: Tween): this {
     if (this.isDestroyed) {
-      Logger.warn(`Attempting to animate destroyed node: ${this.id}`)
+      Logger.warn(`Attempting to animate destroyed node: ${this.element.id}`)
       return this
     }
 
-    this.emit('beforeUpdate', tween)
+    this.emit('tweenTo', tween)
+    Logger.debug(`Tween To: ${this.element.id}`, tween)
+
     this.enableWillChange()
 
     gsap.to(this.element, {
       ...tween,
       overwrite: 'auto',
-      onStart: () => {
-        this.emit('animationStart', tween)
-      },
-      onUpdate: () => {
-        this.emit('animationUpdate', tween)
-      },
       onComplete: () => {
         this.disableWillChange()
-        this.emit('animationComplete', tween)
+        tween.onComplete?.()
       },
       onInterrupt: () => {
         this.disableWillChange()
-        this.emit('animationInterrupt', tween)
+        tween.onInterrupt?.()
       }
     })
-
-    this.emit('afterUpdate', tween)
-    Logger.debug(`Node animated: ${this.id}`, tween)
 
     return this
   }
 
   public addNode(node: BaseNode): this {
     this.element.appendChild(node.element)
-    Logger.debug(`Node added: ${node.id} to ${this.id}`)
+    Logger.debug(`Node added: ${node.element.id} to ${this.element.id}`)
     return this
   }
 
   public removeNode(node: BaseNode): this {
     if (node.element.parentElement === this.element) {
       this.element.removeChild(node.element)
-      Logger.debug(`Node removed: ${node.id} from ${this.id}`)
+      Logger.debug(`Node removed: ${node.element.id} from ${this.element.id}`)
     }
     return this
   }
@@ -120,15 +119,13 @@ export class BaseNode<T extends HTMLElement = HTMLElement> extends EventEmitter 
       return
     }
 
-    this.emit('beforeDestroy')
-
     gsap.killTweensOf(this.element)
 
     this.element.remove()
-
     this.clear()
-
     this.isDestroyed = true
-    Logger.debug(`Node destroyed: ${this.id}`)
+
+    this.emit('nodeDestroyed', this as BaseNode)
+    Logger.debug(`Node destroyed: ${this.element.id}`)
   }
 }

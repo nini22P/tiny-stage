@@ -1,5 +1,4 @@
 import { BaseNode, type BaseNodeProps } from './BaseNode'
-import { Logger } from '../utils/Logger'
 
 export interface VideoNodeProps extends BaseNodeProps {
   src: string;
@@ -22,8 +21,6 @@ export class VideoNode extends BaseNode<HTMLVideoElement> {
     this.element.muted = muted
 
     this.element.src = src
-
-    Logger.debug(`VideoNode initialized: ${id} with src: ${src}`)
   }
 
   public set src(src: string) {

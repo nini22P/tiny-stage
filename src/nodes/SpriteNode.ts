@@ -1,5 +1,4 @@
 import { BaseNode, type BaseNodeProps } from './BaseNode'
-import { Logger } from '../utils/Logger'
 
 export interface SpriteNodeProps extends BaseNodeProps {
   src: string;
@@ -19,8 +18,6 @@ export class SpriteNode extends BaseNode {
         imageRendering: 'auto',
       }
     })
-
-    Logger.debug(`SpriteNode initialized: ${id} with src: ${src}`)
   }
 
   public set src(src: string) {
