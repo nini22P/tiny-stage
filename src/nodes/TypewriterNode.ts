@@ -1,9 +1,7 @@
 import { BaseNode, type BaseNodeProps } from './BaseNode'
 import gsap from 'gsap'
 
-export interface TypewriterNodeProps extends Omit<BaseNodeProps, 'type' | 'tagName'> {
-  text?: string;
-}
+export type TypewriterNodeProps = Omit<BaseNodeProps, 'type' | 'tagName'>
 
 export interface TypewriterOptions {
   speed?: number;
@@ -14,7 +12,6 @@ export interface TypewriterOptions {
 export class TypewriterNode extends BaseNode<HTMLParagraphElement> {
   private _text: string = ''
   private _typeTween?: gsap.core.Tween
-  private _onCharCallback?: (char: string, index: number) => void
 
   constructor(props: TypewriterNodeProps) {
     super({
@@ -28,7 +25,7 @@ export class TypewriterNode extends BaseNode<HTMLParagraphElement> {
       }
     })
 
-    this._text = props.text ?? ''
+    this._text = ''
     this.element.textContent = ''
   }
 
@@ -58,19 +55,12 @@ export class TypewriterNode extends BaseNode<HTMLParagraphElement> {
     return this._typeTween?.isActive() ?? false
   }
 
-  public onChar(callback: (char: string, index: number) => void): this {
-    this._onCharCallback = callback
-    return this
-  }
-
-  public play(text?: string, speedOrOptions?: TypewriterOptions): Promise<this> {
-    const speed = speedOrOptions?.speed ?? 0.025
-    const onChar = speedOrOptions?.onChar
+  public play(text?: string, options?: TypewriterOptions): Promise<this> {
+    const speed = options?.speed ?? 0.025
+    const onChar = options?.onChar
 
     if (text !== undefined) this._text = text
-
     this._typeTween?.kill()
-
     this.element.textContent = ''
 
     if (!this._text) return Promise.resolve(this)
@@ -81,21 +71,32 @@ export class TypewriterNode extends BaseNode<HTMLParagraphElement> {
     return new Promise((resolve) => {
       const obj = { count: 0 }
 
+      let lastProgress = 0
+
       this._typeTween = gsap.to(obj, {
         count: total,
         duration: total * speed,
         ease: 'none',
         onUpdate: () => {
           const progress = Math.floor(obj.count)
-          const currentText = chars.slice(0, progress).join('')
-          this.element.textContent = currentText
 
-          if (progress > 0) {
-            const callback = onChar ?? this._onCharCallback
-            callback?.(chars[progress - 1], progress - 1)
+          if (progress !== lastProgress) {
+            const currentText = chars.slice(0, progress).join('')
+            this.element.textContent = currentText
+
+            for (let i = lastProgress; i < progress; i++) {
+              onChar?.(chars[i], i)
+            }
+
+            lastProgress = progress
           }
         },
         onComplete: () => {
+          if (lastProgress < total) {
+            for (let i = lastProgress; i < total; i++) {
+              onChar?.(chars[i], i)
+            }
+          }
           this.element.textContent = this._text
           this._typeTween = undefined
           resolve(this)

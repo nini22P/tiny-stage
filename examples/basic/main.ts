@@ -38,7 +38,11 @@ function initCommands({ stage, camera, typewriter, nameElement }: CommandContext
   return {
     say: async ({ name, text }: { name: string, text: string }) => {
       nameElement.textContent = name
-      typewriter.play(text, { speed: 0.025 })
+      typewriter.play(text, {
+        speed: 0.025, onChar: (char: string, index: number) => {
+          console.log('onChar:', char, index)
+        }
+      })
       await waitClick(() => {
         if (typewriter.isTypingActive()) {
           typewriter.skip()
@@ -177,7 +181,7 @@ const run = async () => {
   bgm.fade(1, 2000)
   await say({ name: '？？', text: '视频播放结束。' })
 
-  await bgm.play({
+  bgm.play({
     src: 'https://cdn.pixabay.com/audio/2021/11/23/audio_64b2dd1bce.mp3',
     loop: true,
     volume: 1,

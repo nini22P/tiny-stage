@@ -137,7 +137,7 @@ export class AudioNode extends BaseNode {
           else if (pauseOnEnd) audio.pause()
           resolve()
         },
-        onKill: () => resolve(),
+        onInterrupt: () => resolve(),
       })
     })
   }
