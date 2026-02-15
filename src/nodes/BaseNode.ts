@@ -14,6 +14,8 @@ export class BaseNode<T extends HTMLElement = HTMLElement> {
   public element: T
   public id: string
 
+  protected children: BaseNode[] = []
+
   private animationCount = 0
   private isDestroyed = false
 
@@ -74,12 +76,14 @@ export class BaseNode<T extends HTMLElement = HTMLElement> {
   }
 
   public addNode(node: BaseNode): this {
+    this.children.push(node)
     this.element.appendChild(node.element)
     Logger.debug(`Node added: ${node.element.id} to ${this.element.id} `)
     return this
   }
 
   public removeNode(node: BaseNode): this {
+    this.children = this.children.filter(c => c !== node)
     if (node.element.parentElement === this.element) {
       this.element.removeChild(node.element)
       Logger.debug(`Node removed: ${node.element.id} from ${this.element.id} `)
@@ -106,6 +110,9 @@ export class BaseNode<T extends HTMLElement = HTMLElement> {
     if (this.isDestroyed) {
       return
     }
+
+    [...this.children].forEach(child => child.destroy())
+    this.children = []
 
     gsap.killTweensOf(this.element)
 

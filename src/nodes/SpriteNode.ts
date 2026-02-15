@@ -1,6 +1,6 @@
 import { BaseNode, type BaseNodeProps } from './BaseNode'
 
-export interface SpriteNodeProps extends Omit<BaseNodeProps, 'type'> {
+export interface SpriteNodeProps extends Omit<BaseNodeProps, 'type' | 'tagName'> {
   src: string;
 }
 

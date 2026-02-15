@@ -2,7 +2,7 @@ import gsap from 'gsap'
 import { Logger, LogLevel } from '../utils/Logger'
 import { BaseNode, type BaseNodeProps } from './BaseNode'
 
-export interface StageConfig extends Omit<BaseNodeProps, 'type'> {
+export interface StageConfig extends Omit<BaseNodeProps, 'type' | 'tagName'> {
   container: HTMLElement;
   width: number;
   height: number;

@@ -1,7 +1,7 @@
 import { Logger } from '../utils/Logger';
 import { BaseNode, type BaseNodeProps } from './BaseNode'
 
-export interface VideoNodeProps extends Omit<BaseNodeProps, 'type'> {
+export interface VideoNodeProps extends Omit<BaseNodeProps, 'type' | 'tagName'> {
   src: string;
   muted?: boolean;
   loop?: boolean;

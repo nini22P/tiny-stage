@@ -1,4 +1,4 @@
-﻿import { Stage, BaseNode, SpriteNode, TypewriterNode, type Tween, VideoNode } from '../../src/index'
+﻿import { Stage, BaseNode, SpriteNode, TypewriterNode, type Tween, VideoNode, AudioNode } from '../../src/index'
 
 const Animation = {
   shake: () => [
@@ -78,7 +78,7 @@ function initCommands({ stage, camera, typewriter, nameElement }: CommandContext
   }
 }
 
-async function run() {
+const run = async () => {
   const stage = new Stage({
     container: document.getElementById('app')!,
     id: 'root',
@@ -93,6 +93,9 @@ async function run() {
     tween: { x: 0, y: 0, width: stage.config.width, height: stage.config.height, opacity: 1, overflow: 'visible', zIndex: 1 }
   })
   stage.addNode(camera)
+
+  const bgm = new AudioNode({ id: 'bgm' })
+  camera.addNode(bgm)
 
   const dialogBox = new BaseNode({
     id: 'dialog-box',
@@ -155,6 +158,13 @@ async function run() {
 
   await say({ name: '？？', text: '你好！很高兴见到你。' })
 
+  bgm.play({
+    src: 'https://cdn.pixabay.com/audio/2023/04/01/audio_cfab90ef1f.mp3',
+    loop: true,
+    volume: 1,
+    duration: 1000,
+  })
+
   camera.to({ keyframes: Animation.zoomIn() })
   await say({ name: '？？', text: '超长文字测试超长文字测试超长文字测试超长文字测试超长文字测试超长文字测试超长文字测试超长文字测试超长文字测试超长文字测试超长文字测试超长文字测试超长文字测试超长文字测试超长文字测试超长文字测试超长文字测试超长文字测试超长文字测试超长文字测试超长文字测试超长文字测试超长文字测试超长文字测试超长文字测试超长文字测试超长文字测试超长文字测试超长文字测试超长文字测试超长文字测试超长文字测试超长文字测试超长文字测试超长文字测试超长文字测试超长文字测试超长文字测试' })
 
@@ -162,10 +172,21 @@ async function run() {
   await camera.to({ keyframes: Animation.reset() })
 
   say({ name: '？？', text: '正在播放视频。' })
+  bgm.fade(0.5, 2000)
   await video({ src: 'https://test-videos.co.uk/vids/bigbuckbunny/webm/vp9/1080/Big_Buck_Bunny_1080_10s_5MB.webm', skip: true })
+  bgm.fade(1, 2000)
   await say({ name: '？？', text: '视频播放结束。' })
 
+  await bgm.play({
+    src: 'https://cdn.pixabay.com/audio/2021/11/23/audio_64b2dd1bce.mp3',
+    loop: true,
+    volume: 1,
+    duration: 2000,
+  })
+  await say({ name: '？？', text: '背景音乐已切换。' })
+
   say({ name: '', text: '点击画面重新开始' })
+  bgm.pause(2000)
   await waitClick(() => {
     stage.destroy()
     run()

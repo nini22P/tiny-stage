@@ -1,7 +1,7 @@
 import { BaseNode, type BaseNodeProps } from './BaseNode'
 import gsap from 'gsap'
 
-export interface TypewriterNodeProps extends Omit<BaseNodeProps, 'type'> {
+export interface TypewriterNodeProps extends Omit<BaseNodeProps, 'type' | 'tagName'> {
   text?: string;
 }
 
@@ -18,7 +18,7 @@ export class TypewriterNode extends BaseNode<HTMLParagraphElement> {
 
   constructor(props: TypewriterNodeProps) {
     super({
-      type: 'text',
+      type: 'typewriter',
       id: props.id,
       tagName: 'p',
       tween: {
