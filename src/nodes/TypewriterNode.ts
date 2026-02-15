@@ -85,18 +85,15 @@ export class TypewriterNode extends BaseNode<HTMLParagraphElement> {
             this.element.textContent = currentText
 
             for (let i = lastProgress; i < progress; i++) {
-              onChar?.(chars[i], i)
+              if (this._typeTween?.isActive()) {
+                onChar?.(chars[i], i)
+              }
             }
 
             lastProgress = progress
           }
         },
         onComplete: () => {
-          if (lastProgress < total) {
-            for (let i = lastProgress; i < total; i++) {
-              onChar?.(chars[i], i)
-            }
-          }
           this.element.textContent = this._text
           this._typeTween = undefined
           resolve(this)
