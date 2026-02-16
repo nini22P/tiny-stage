@@ -1,1 +1,1 @@
-# WebGAL Stage
+# Tiny Stage

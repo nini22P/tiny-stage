@@ -10,7 +10,7 @@ export type LogLevel = typeof LogLevel[keyof typeof LogLevel];
 
 export class Logger {
   private static level: LogLevel = LogLevel.WARN
-  private static prefix = '[WebGAL Stage]'
+  private static prefix = '[Tiny Stage]'
 
   static setLevel(level: LogLevel): void {
     this.level = level

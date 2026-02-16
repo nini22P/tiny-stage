@@ -1,13 +1,13 @@
 {
-  "name": "webgal-stage",
+  "name": "tiny-stage",
   "version": "1.0.0",
   "type": "module",
-  "main": "./dist/webgal-stage.umd.cjs",
-  "module": "./dist/webgal-stage.js",
+  "main": "./dist/tiny-stage.umd.cjs",
+  "module": "./dist/tiny-stage.js",
   "exports": {
     ".": {
-      "import": "./dist/webgal-stage.js",
-      "require": "./dist/webgal-stage.umd.cjs"
+      "import": "./dist/tiny-stage.js",
+      "require": "./dist/tiny-stage.umd.cjs"
     }
   },
   "files": [
@@ -44,5 +44,9 @@
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.55.0",
     "vite": "^8.0.0-beta.14"
+  },
+  "dependencies": {
+    "easy-live2d": "0.4.0-1",
+    "pixi.js": "^8.16.0"
   }
 }

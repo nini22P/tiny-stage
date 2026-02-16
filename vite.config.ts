@@ -5,8 +5,8 @@ export default defineConfig({
   build: {
     lib: {
       entry: resolve(__dirname, 'src/index.ts'),
-      name: 'WebGAL Stage',
-      fileName: (format) => `webgal-stage.${format === 'es' ? 'js' : 'umd.cjs'}`,
+      name: 'Tiny Stage',
+      fileName: (format) => `tiny-stage.${format === 'es' ? 'js' : 'umd.cjs'}`,
       formats: ['es', 'umd'],
     },
     rollupOptions: {
