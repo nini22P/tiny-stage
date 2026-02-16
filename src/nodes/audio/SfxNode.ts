@@ -19,7 +19,7 @@ export class SfxNode extends HowlNode {
     volume?: number
     loop?: number
     delay?: number | (() => number)
-  }): Promise<number> {
+  }): Promise<SoundInstance> {
     const { delay = 0, loop = 1, volume = 1, src } = options
     const waitTime = typeof delay === 'function' ? delay() : delay
 
@@ -36,82 +36,83 @@ export class SfxNode extends HowlNode {
     return this.playSfx(src, loop, volume)
   }
 
-  private async playSfx(src: string, loopCount: number, volume: number): Promise<number> {
+  private async playSfx(src: string, loopCount: number, volume: number): Promise<SoundInstance> {
     const howlInstance = this.getHowlInstance(src)
 
     this.checkMaxConcurrent()
 
     try {
       await this.waitLoaded(howlInstance.howl)
-
       const soundId = howlInstance.howl.play()
       const isInfinite = loopCount === -1 || loopCount === Infinity
 
       howlInstance.howl.volume(volume, soundId)
       howlInstance.howl.loop(isInfinite, soundId)
 
-      const instance: SoundInstance = {
-        id: soundId,
-        startTime: Date.now()
-      }
-      howlInstance.sounds.add(instance)
+      const instance: SoundInstance = { id: soundId, src, startTime: Date.now() }
+      howlInstance.sounds.set(soundId, instance)
 
-      if (!isInfinite && loopCount > 1) {
-        let remaining = loopCount - 1
-        const onEnd = (id: number) => {
-          if (id !== soundId) return
-          if (remaining > 0) {
-            remaining--
-            howlInstance.howl.play(soundId)
-          }
+      let remaining = isInfinite ? -1 : loopCount - 1
+
+      const onEnd = (id: number) => {
+        if (id !== soundId) return
+
+        if (!isInfinite && remaining > 0) {
+          remaining--
+          howlInstance.howl.play(id)
+        } else if (!isInfinite) {
+          this.cleanup(howlInstance, soundId)
+          howlInstance.howl.off('end', onEnd, id)
         }
-        howlInstance.howl.on('end', onEnd, soundId)
       }
 
-      howlInstance.howl.once('end', () => {
-        if (!isInfinite) {
-          this.removeAudioInstance(howlInstance, soundId)
-        }
-      }, soundId)
+      howlInstance.howl.on('end', onEnd, soundId)
 
-      return soundId
+      howlInstance.howl.once('playerror', () => this.cleanup(howlInstance, soundId), soundId)
+
+      return instance
     } catch (error) {
+      this.howls.delete(src)
       Logger.error('Sfx Node Play Error:', error)
       return Promise.reject(error)
     }
   }
 
+  private cleanup(howlInstance: HowlInstance, soundId: number) {
+    this.removeAudioInstance(howlInstance, soundId)
+  }
+
   private checkMaxConcurrent() {
-    const allActiveSounds: { howlInstance: HowlInstance; sound: SoundInstance }[] = []
+    if (this.totalActiveCount >= this.maxConcurrent) {
 
-    this.howls.forEach(howlInstance => {
-      howlInstance.sounds.forEach(sound => {
-        allActiveSounds.push({ howlInstance, sound })
-      })
-    })
+      let oldest: { howlInstance: HowlInstance; sound: SoundInstance } | null = null
 
-    if (allActiveSounds.length >= this.maxConcurrent) {
-      const oldest = allActiveSounds.sort((a, b) => a.sound.startTime - b.sound.startTime)[0]
+      for (const item of this.activeSoundsIterator()) {
+        if (!oldest || item.sound.startTime < oldest.sound.startTime) {
+          oldest = item
+        }
+      }
+
       if (oldest) {
-        this.stop(oldest.sound.id)
+        this.stop(oldest.sound.id, 0.05)
       }
     }
   }
 
   public async stop(target: number | string, fade: number = 0) {
-    this.howls.forEach(howlRes => {
-      const soundsToStop = Array.from(howlRes.sounds).filter(s =>
-        typeof target === 'number' ? s.id === target : howlRes.src === target
+    this.howls.forEach(howlInstance => {
+      const soundsToStop = Array.from(howlInstance.sounds.values()).filter(s =>
+        typeof target === 'number' ? s.id === target : howlInstance.src === target
       )
 
       soundsToStop.forEach(async sound => {
-        await this.fadeHowl(howlRes, {
+        await this.fadeHowl(howlInstance, {
           volume: 0,
           fade,
           soundId: sound.id,
           onComplete: () => {
-            howlRes.howl.stop(sound.id)
-            this.removeAudioInstance(howlRes, sound.id)
+            howlInstance.howl.stop(sound.id)
+            this.removeAudioInstance(howlInstance, sound.id)
           }
         })
       })

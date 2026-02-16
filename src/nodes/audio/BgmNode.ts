@@ -1,5 +1,5 @@
 import { Logger } from '../../utils/Logger'
-import { HowlNode, type HowlNodeProps } from './HowlNode'
+import { HowlNode, type HowlNodeProps, type SoundInstance } from './HowlNode'
 
 export type BgmNodeProps = Omit<HowlNodeProps, 'type' | 'tagName'>
 
@@ -22,69 +22,81 @@ export class BgmNode extends HowlNode {
     loop?: boolean;
     volume?: number;
     fade?: number;
-  } = {}): Promise<number> {
+  } = {}): Promise<SoundInstance> {
     const fadeTime = options.fade ?? 0
     const volume = options.volume ?? this.targetVolume
-    if (options.volume !== undefined)
-      this.targetVolume = volume
+    if (options.volume !== undefined) this.targetVolume = volume
 
     if (!options.src || options.src === this.currentSrc) {
-      const currentHowl = this.currentHowl
-      if (currentHowl) {
-        currentHowl.howl.loop(options.loop ?? currentHowl.howl.loop())
-        if (!currentHowl.howl.playing()) {
-          currentHowl.howl.volume(0)
-          currentHowl.howl.play()
-        }
-        await this.fadeHowl(currentHowl, { volume, fade: fadeTime })
-        return currentHowl.sounds.values().next().value?.id ?? 0
+      const current = this.currentHowl
+      if (!current)
+        return Promise.reject('No BGM to play')
+
+      const howl = current.howl
+      howl.loop(options.loop ?? howl.loop())
+
+      if (!howl.playing()) {
+        const id = howl.play()
+        howl.volume(0, id)
+        current.sounds.clear()
+        current.sounds.set(id, { id, src: current.src, startTime: Date.now() })
       }
-      return 0
+
+      const soundId = Array.from(current.sounds.keys())[0]
+      await this.fadeHowl(current, { volume, fade: fadeTime, soundId })
+      return current.sounds.get(soundId)!
     }
 
     const oldSrc = this.currentSrc
     const newSrc = options.src
-    const newHowl = this.getHowlInstance(newSrc, true)
+
+    this.currentSrc = newSrc
+    const newHowlInstance = this.getHowlInstance(newSrc, true)
 
     try {
-      await this.waitLoaded(newHowl.howl)
+      await this.waitLoaded(newHowlInstance.howl)
 
-      const soundId = newHowl.howl.play()
-      newHowl.sounds.clear()
-      newHowl.sounds.add({ id: soundId, startTime: Date.now() })
-      newHowl.howl.volume(0, soundId)
-      newHowl.howl.loop(options.loop ?? true, soundId)
+      if (this.currentSrc !== newSrc)
+        return Promise.reject('Play interrupted by new BGM')
+
+      const soundId = newHowlInstance.howl.play()
+      newHowlInstance.sounds.clear()
+      newHowlInstance.sounds.set(soundId, { id: soundId, src: newSrc, startTime: Date.now() })
+
+      newHowlInstance.howl.volume(0, soundId)
+      newHowlInstance.howl.loop(options.loop ?? true, soundId)
 
       const fadeTasks: Promise<void>[] = []
 
-      this.currentSrc = newSrc
-
-      if (oldSrc) {
+      if (oldSrc && oldSrc !== newSrc) {
         const oldHowl = this.howls.get(oldSrc)
         if (oldHowl) {
           fadeTasks.push(this.fadeHowl(oldHowl, {
             volume: 0,
             fade: fadeTime,
             onComplete: () => {
-              oldHowl.howl.stop()
-              oldHowl.sounds.clear()
+              if (this.currentSrc !== oldSrc) {
+                oldHowl.howl.stop()
+                oldHowl.sounds.clear()
+              }
             }
           }))
         }
       }
 
-      fadeTasks.push(this.fadeHowl(newHowl, {
+      fadeTasks.push(this.fadeHowl(newHowlInstance, {
         volume,
         fade: fadeTime,
         soundId
       }))
 
       await Promise.all(fadeTasks)
+      return newHowlInstance.sounds.get(soundId)!
 
-      return soundId
     } catch (e) {
+      this.howls.delete(newSrc)
       Logger.error('BGM Switch Error:', e)
-      return 0
+      return Promise.reject(e)
     }
   }
 
@@ -114,7 +126,7 @@ export class BgmNode extends HowlNode {
     }
   }
 
-  public async resume(fade: number = 0): Promise<number> {
+  public async resume(fade: number = 0): Promise<SoundInstance> {
     return await this.play({ fade })
   }
 
@@ -145,11 +157,19 @@ export class BgmNode extends HowlNode {
   }
 
   public set volume(value: number) {
+    const oldVolume = this.targetVolume
     this.targetVolume = value
+
     const currentHowl = this.currentHowl
     if (currentHowl) {
-      gsap.killTweensOf(currentHowl.howl)
-      currentHowl.howl.volume(value)
+      if (Math.abs(oldVolume - value) < 0.01) return
+
+      this.fadeHowl(currentHowl, {
+        volume: value,
+        fade: 0.2,
+      }).catch(err => {
+        Logger.warn('BGM Volume Setter Fade Error:', err)
+      })
     }
   }
 

@@ -18,31 +18,25 @@ export class VoiceNode extends HowlNode {
     speakerId?: string
     interrupt?: 'all' | 'self' | 'none'
     onComplete?: () => void
-  }) {
-    const {
-      src,
-      volume = 1,
-      speakerId = 'default',
-      interrupt = 'all',
-      onComplete,
-    } = options
+  }): Promise<VoiceSoundInstance> {
+    const { src, volume = 1, speakerId = 'default', interrupt = 'all', onComplete } = options
 
     const targetHowlInstance = this.howls.get(src)
     if (targetHowlInstance) {
-      const existing = Array.from(targetHowlInstance.sounds).find(i => i.speakerId === speakerId) as VoiceSoundInstance
+      const existing = Array.from(targetHowlInstance.sounds.values()).find(i => i.speakerId === speakerId) as VoiceSoundInstance
       if (existing && targetHowlInstance.howl.playing(existing.id)) {
         targetHowlInstance.howl.seek(0, existing.id)
-        targetHowlInstance.howl.volume(volume, existing.id);
+        targetHowlInstance.howl.volume(volume, existing.id)
         existing.onComplete = onComplete
         targetHowlInstance.lastUsed = Date.now()
-        return existing.id
+        return existing
       }
     }
 
     if (interrupt === 'all') {
       this.stopAll(0.1)
     } else if (interrupt === 'self') {
-      this.stop(speakerId, 0.1)
+      await this.stop(speakerId, 0.1)
     }
 
     const howlInstance = this.getHowlInstance(src, true)
@@ -55,44 +49,57 @@ export class VoiceNode extends HowlNode {
 
       const voiceInstance: VoiceSoundInstance = {
         id: soundId,
+        src,
         speakerId,
         onComplete,
         startTime: Date.now()
       }
-      howlInstance.sounds.add(voiceInstance)
+      howlInstance.sounds.set(soundId, voiceInstance)
 
-      howlInstance.howl.once('end', () => {
-        voiceInstance.onComplete?.()
-        this.removeAudioInstance(howlInstance, soundId)
-      }, soundId)
+      const cleanup = () => {
+        const current = howlInstance.sounds.get(soundId) as VoiceSoundInstance
+        if (current) {
+          current.onComplete?.()
+          this.removeAudioInstance(howlInstance, soundId)
+        }
+      }
 
-      return soundId
+      howlInstance.howl.once('end', cleanup, soundId)
+      howlInstance.howl.once('playerror', cleanup, soundId)
+
+      return voiceInstance
     } catch (error) {
       Logger.error('Voice Node Play Error:', error)
       onComplete?.()
+      this.howls.delete(src)
       return Promise.reject(error)
     }
   }
 
   public async stop(speakerId: string, fade: number = 0): Promise<void> {
+    const promises: Promise<void>[] = []
+
     this.howls.forEach(howlInstance => {
-      Array.from(howlInstance.sounds).forEach(async sound => {
+      Array.from(howlInstance.sounds.values()).forEach(sound => {
         if (sound.speakerId === speakerId) {
-          await this.fadeHowl(
-            howlInstance,
-            {
+          promises.push(
+            this.fadeHowl(howlInstance, {
               volume: 0,
               fade,
               soundId: sound.id,
               onComplete: () => {
                 howlInstance.howl.stop(sound.id)
+                const instance = sound as VoiceSoundInstance
+                instance.onComplete?.()
                 this.removeAudioInstance(howlInstance, sound.id)
               }
-            }
+            })
           )
         }
       })
     })
+
+    await Promise.all(promises)
   }
 
   public destroy(): void {
