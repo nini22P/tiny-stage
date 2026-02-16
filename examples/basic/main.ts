@@ -1,4 +1,4 @@
-﻿import { Stage, BaseNode, SpriteNode, TypewriterNode, type Tween, VideoNode, AudioNode } from '../../src/index'
+﻿import { Stage, BaseNode, SpriteNode, TypewriterNode, type Tween, VideoNode, BgmNode } from '../../src/index'
 
 const Animation = {
   shake: () => [
@@ -98,7 +98,7 @@ const run = async () => {
   })
   stage.addNode(camera)
 
-  const bgm = new AudioNode({ id: 'bgm' })
+  const bgm = new BgmNode({ id: 'bgm' })
   camera.addNode(bgm)
 
   const dialogBox = new BaseNode({
@@ -166,7 +166,7 @@ const run = async () => {
     src: 'https://cdn.pixabay.com/audio/2023/04/01/audio_cfab90ef1f.mp3',
     loop: true,
     volume: 1,
-    duration: 1000,
+    fade: 1,
   })
 
   camera.to({ keyframes: Animation.zoomIn() })
@@ -176,21 +176,21 @@ const run = async () => {
   await camera.to({ keyframes: Animation.reset() })
 
   say({ name: '？？', text: '正在播放视频。' })
-  bgm.fade(0.5, 2000)
+  bgm.fade(0.5, 2)
   await video({ src: 'https://test-videos.co.uk/vids/bigbuckbunny/webm/vp9/1080/Big_Buck_Bunny_1080_10s_5MB.webm', skip: true })
-  bgm.fade(1, 2000)
+  bgm.fade(1, 2)
   await say({ name: '？？', text: '视频播放结束。' })
 
   bgm.play({
     src: 'https://cdn.pixabay.com/audio/2021/11/23/audio_64b2dd1bce.mp3',
     loop: true,
     volume: 1,
-    duration: 2000,
+    fade: 2,
   })
   await say({ name: '？？', text: '背景音乐已切换。' })
 
   say({ name: '', text: '点击画面重新开始' })
-  bgm.pause(2000)
+  bgm.pause(2)
   await waitClick(() => {
     stage.destroy()
     run()
