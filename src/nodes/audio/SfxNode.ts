@@ -10,7 +10,11 @@ export class SfxNode extends HowlNode {
   private pendingTimeouts: Set<number> = new Set()
 
   constructor(props: SfxNodeProps) {
-    super({ ...props, type: 'sfx' })
+    super({
+      ...props,
+      type: 'sfx',
+      poolSize: props.poolSize ?? 20,
+    })
     this.maxConcurrent = props.maxConcurrent ?? 20
   }
 
@@ -37,7 +41,7 @@ export class SfxNode extends HowlNode {
   }
 
   private async playSfx(src: string, loopCount: number, volume: number): Promise<SoundInstance> {
-    const howlInstance = this.getHowlInstance(src)
+    const howlInstance = this.getHowlInstance({ src })
 
     this.checkMaxConcurrent()
 

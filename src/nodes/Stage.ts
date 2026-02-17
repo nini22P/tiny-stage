@@ -85,7 +85,7 @@ export class Stage extends BaseNode<HTMLElement> {
     Logger.debug('Layout updated', { scale, offsetX, offsetY })
   }
 
-  public destroy(): void {
+  public override destroy(): void {
     Logger.info('Stage destroying...')
 
     if (this.resizeTimer !== null) {

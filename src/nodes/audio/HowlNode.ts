@@ -31,7 +31,7 @@ export abstract class HowlNode extends BaseNode {
     this.poolSize = props.poolSize ?? 10
   }
 
-  protected getHowlInstance(src: string, html5 = false): HowlInstance {
+  protected getHowlInstance({ src, html5 = false, volume = 1 }: { src: string, html5?: boolean, volume?: number }): HowlInstance {
     const howlInstance = this.howls.get(src)
 
     if (howlInstance) {
@@ -41,7 +41,7 @@ export abstract class HowlNode extends BaseNode {
 
     this.purgeCache()
 
-    const howl = new Howl({ src: [src], html5, preload: true })
+    const howl = new Howl({ src: [src], html5, preload: true, volume })
 
     const instance: HowlInstance = {
       howl,
@@ -104,14 +104,14 @@ export abstract class HowlNode extends BaseNode {
     options: {
       volume: number;
       fade: number;
-      soundId?: number;
+      soundId: number;
       onComplete?: () => void;
     }
   ): Promise<void> {
     const { volume, fade, soundId, onComplete } = options
     const howl = howlInstance.howl
 
-    const tweenKey = `${howlInstance.src}_${soundId ?? 'global'}`
+    const tweenKey = `${howlInstance.src}_${soundId}`
 
     const existing = this.howlTweens.get(tweenKey)
     if (existing) {
@@ -119,14 +119,11 @@ export abstract class HowlNode extends BaseNode {
       this.howlTweens.delete(tweenKey)
     }
 
-    const currentVolume = soundId !== undefined ? howl.volume(soundId) as number : howl.volume()
+    const currentVolume = howl.volume(soundId) as number
     const targetVolume = Math.max(0, Math.min(1, volume))
 
     if (fade <= 0) {
-      if (soundId !== undefined)
-        howl.volume(targetVolume, soundId)
-      else
-        howl.volume(targetVolume)
+      howl.volume(targetVolume, soundId)
       onComplete?.()
       return Promise.resolve()
     }
@@ -135,7 +132,6 @@ export abstract class HowlNode extends BaseNode {
     this.howlTweens.set(tweenKey, { proxy })
 
     return new Promise((resolve) => {
-
       gsap.to(proxy, {
         volume: targetVolume,
         duration: fade,
@@ -144,10 +140,7 @@ export abstract class HowlNode extends BaseNode {
         onUpdate: () => {
           if (howl.state() === 'unloaded')
             return
-          if (soundId !== undefined)
-            howl.volume(proxy.volume, soundId)
-          else
-            howl.volume(proxy.volume)
+          howl.volume(proxy.volume, soundId)
         },
         onComplete: () => {
           onComplete?.()
@@ -209,7 +202,7 @@ export abstract class HowlNode extends BaseNode {
     return count
   }
 
-  public destroy(): void {
+  public override destroy(): void {
     this.howlTweens.forEach(val => {
       gsap.killTweensOf(val.proxy)
     })

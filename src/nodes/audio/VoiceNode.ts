@@ -3,13 +3,11 @@ import { HowlNode, type SoundInstance, type HowlNodeProps } from './HowlNode'
 
 export type VoiceNodeProps = Omit<HowlNodeProps, 'type' | 'tagName'>
 
-interface VoiceSoundInstance extends SoundInstance {
-  onComplete?: () => void;
-}
+type VoiceSoundInstance = SoundInstance
 
 export class VoiceNode extends HowlNode {
   constructor(props: VoiceNodeProps) {
-    super({ ...props, type: 'voice' })
+    super({ ...props, type: 'voice', poolSize: props.poolSize ?? 10 })
   }
 
   public async play(options: {
@@ -17,9 +15,8 @@ export class VoiceNode extends HowlNode {
     volume?: number
     speakerId?: string
     interrupt?: 'all' | 'self' | 'none'
-    onComplete?: () => void
   }): Promise<VoiceSoundInstance> {
-    const { src, volume = 1, speakerId = 'default', interrupt = 'all', onComplete } = options
+    const { src, volume = 1, speakerId = 'default', interrupt = 'all' } = options
 
     const targetHowlInstance = this.howls.get(src)
     if (targetHowlInstance) {
@@ -27,7 +24,6 @@ export class VoiceNode extends HowlNode {
       if (existing && targetHowlInstance.howl.playing(existing.id)) {
         targetHowlInstance.howl.seek(0, existing.id)
         targetHowlInstance.howl.volume(volume, existing.id)
-        existing.onComplete = onComplete
         targetHowlInstance.lastUsed = Date.now()
         return existing
       }
@@ -39,7 +35,7 @@ export class VoiceNode extends HowlNode {
       await this.stop(speakerId, 0.1)
     }
 
-    const howlInstance = this.getHowlInstance(src, true)
+    const howlInstance = this.getHowlInstance({ src })
 
     try {
       await this.waitLoaded(howlInstance.howl)
@@ -51,7 +47,6 @@ export class VoiceNode extends HowlNode {
         id: soundId,
         src,
         speakerId,
-        onComplete,
         startTime: Date.now()
       }
       howlInstance.sounds.set(soundId, voiceInstance)
@@ -59,7 +54,6 @@ export class VoiceNode extends HowlNode {
       const cleanup = () => {
         const current = howlInstance.sounds.get(soundId) as VoiceSoundInstance
         if (current) {
-          current.onComplete?.()
           this.removeAudioInstance(howlInstance, soundId)
         }
       }
@@ -70,7 +64,6 @@ export class VoiceNode extends HowlNode {
       return voiceInstance
     } catch (error) {
       Logger.error('Voice Node Play Error:', error)
-      onComplete?.()
       this.howls.delete(src)
       return Promise.reject(error)
     }
@@ -89,8 +82,6 @@ export class VoiceNode extends HowlNode {
               soundId: sound.id,
               onComplete: () => {
                 howlInstance.howl.stop(sound.id)
-                const instance = sound as VoiceSoundInstance
-                instance.onComplete?.()
                 this.removeAudioInstance(howlInstance, sound.id)
               }
             })
@@ -102,7 +93,7 @@ export class VoiceNode extends HowlNode {
     await Promise.all(promises)
   }
 
-  public destroy(): void {
+  public override destroy(): void {
     super.destroy()
   }
 }
