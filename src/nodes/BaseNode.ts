@@ -14,10 +14,10 @@ export class BaseNode<T extends HTMLElement = HTMLElement> {
   public element: T
   public id: string
 
-  protected children: BaseNode[] = []
+  protected _children: BaseNode[] = []
 
-  private animationCount = 0
-  private isDestroyed = false
+  private _animationCount = 0
+  private _isDestroyed = false
 
   constructor({ type = 'base', id, tagName = 'div', tween }: BaseNodeProps) {
     this.id = id
@@ -37,7 +37,7 @@ export class BaseNode<T extends HTMLElement = HTMLElement> {
   }
 
   public set(tween: Tween): this {
-    if (this.isDestroyed) {
+    if (this._isDestroyed) {
       Logger.warn(`Attempting to set destroyed node: ${this.element.id} `)
       return this
     }
@@ -50,24 +50,24 @@ export class BaseNode<T extends HTMLElement = HTMLElement> {
   }
 
   public async to(tween: Tween): Promise<this> {
-    if (this.isDestroyed) {
+    if (this._isDestroyed) {
       Logger.warn(`Attempting to animate destroyed node: ${this.element.id} `)
       return this
     }
 
     Logger.debug(`Tween To: ${this.element.id} `, tween)
 
-    this.enableWillChange()
+    this._enableWillChange()
 
     await gsap.to(this.element, {
       ...tween,
       overwrite: 'auto',
       onComplete: () => {
-        this.disableWillChange()
+        this._disableWillChange()
         tween.onComplete?.()
       },
       onInterrupt: () => {
-        this.disableWillChange()
+        this._disableWillChange()
         tween.onInterrupt?.()
       }
     })
@@ -76,14 +76,14 @@ export class BaseNode<T extends HTMLElement = HTMLElement> {
   }
 
   public addNode(node: BaseNode): this {
-    this.children.push(node)
+    this._children.push(node)
     this.element.appendChild(node.element)
     Logger.debug(`Node added: ${node.element.id} to ${this.element.id} `)
     return this
   }
 
   public removeNode(node: BaseNode): this {
-    this.children = this.children.filter(c => c !== node)
+    this._children = this._children.filter(c => c !== node)
     if (node.element.parentElement === this.element) {
       this.element.removeChild(node.element)
       Logger.debug(`Node removed: ${node.element.id} from ${this.element.id} `)
@@ -91,33 +91,33 @@ export class BaseNode<T extends HTMLElement = HTMLElement> {
     return this
   }
 
-  private enableWillChange(): void {
-    if (this.animationCount === 0) {
+  private _enableWillChange(): void {
+    if (this._animationCount === 0) {
       this.element.style.willChange = 'transform, opacity'
     }
-    this.animationCount++
+    this._animationCount++
   }
 
-  private disableWillChange(): void {
-    this.animationCount--
-    if (this.animationCount <= 0) {
-      this.animationCount = 0
+  private _disableWillChange(): void {
+    this._animationCount--
+    if (this._animationCount <= 0) {
+      this._animationCount = 0
       this.element.style.willChange = 'auto'
     }
   }
 
   public destroy(): void {
-    if (this.isDestroyed) {
+    if (this._isDestroyed) {
       return
     }
 
-    [...this.children].forEach(child => child.destroy())
-    this.children = []
+    [...this._children].forEach(child => child.destroy())
+    this._children = []
 
     gsap.killTweensOf(this.element)
 
     this.element.remove()
-    this.isDestroyed = true
+    this._isDestroyed = true
 
     Logger.debug(`Node destroyed: ${this.element.id} `)
   }

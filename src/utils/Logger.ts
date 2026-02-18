@@ -9,11 +9,23 @@ export const LogLevel = {
 export type LogLevel = typeof LogLevel[keyof typeof LogLevel];
 
 export class Logger {
-  private static level: LogLevel = LogLevel.WARN
-  private static prefix = '[Tiny Stage]'
+  private static _level: LogLevel = LogLevel.WARN
+  private static _prefix = '[Tiny Stage]'
 
   static setLevel(level: LogLevel): void {
-    this.level = level
+    this._level = level
+  }
+
+  static get level(): LogLevel {
+    return this._level
+  }
+
+  static set prefix(prefix: string) {
+    this._prefix = prefix
+  }
+
+  static get prefix(): string {
+    return this._prefix
   }
 
   static getLevel(): LogLevel {

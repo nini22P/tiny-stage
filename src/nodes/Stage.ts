@@ -10,9 +10,11 @@ export interface StageConfig extends Omit<BaseNodeProps, 'type' | 'tagName'> {
 }
 
 export class Stage extends BaseNode<HTMLElement> {
+
   public config: StageConfig
-  private resizeObserver: ResizeObserver
-  private resizeTimer: number | null = null
+
+  private _resizeObserver: ResizeObserver
+  private _resizeTimer: number | null = null
 
   constructor(config: StageConfig) {
     super({
@@ -44,23 +46,23 @@ export class Stage extends BaseNode<HTMLElement> {
     this.config = config
     this.config.container.appendChild(this.element)
 
-    this.updateLayout()
+    this._updateLayout()
 
-    this.resizeObserver = new ResizeObserver(() => {
-      if (this.resizeTimer !== null) {
-        cancelAnimationFrame(this.resizeTimer)
+    this._resizeObserver = new ResizeObserver(() => {
+      if (this._resizeTimer !== null) {
+        cancelAnimationFrame(this._resizeTimer)
       }
-      this.resizeTimer = requestAnimationFrame(() => {
-        this.updateLayout()
-        this.resizeTimer = null
+      this._resizeTimer = requestAnimationFrame(() => {
+        this._updateLayout()
+        this._resizeTimer = null
       })
     })
-    this.resizeObserver.observe(config.container)
+    this._resizeObserver.observe(config.container)
 
     Logger.info('Stage created successfully')
   }
 
-  private updateLayout(): void {
+  private _updateLayout(): void {
     const { container, width, height } = this.config
     const containerWidth = container.clientWidth
     const containerHeight = container.clientHeight
@@ -88,12 +90,12 @@ export class Stage extends BaseNode<HTMLElement> {
   public override destroy(): void {
     Logger.info('Stage destroying...')
 
-    if (this.resizeTimer !== null) {
-      cancelAnimationFrame(this.resizeTimer)
-      this.resizeTimer = null
+    if (this._resizeTimer !== null) {
+      cancelAnimationFrame(this._resizeTimer)
+      this._resizeTimer = null
     }
 
-    this.resizeObserver.disconnect()
+    this._resizeObserver.disconnect()
 
     super.destroy()
 

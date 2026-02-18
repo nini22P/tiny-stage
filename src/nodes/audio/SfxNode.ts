@@ -6,8 +6,8 @@ export type SfxNodeProps = Omit<HowlNodeProps, 'type' | 'tagName'> & {
 }
 
 export class SfxNode extends HowlNode {
-  private maxConcurrent: number
-  private pendingTimeouts: Set<number> = new Set()
+  private _maxConcurrent: number
+  private _pendingTimeouts: Set<number> = new Set()
 
   constructor(props: SfxNodeProps) {
     super({
@@ -15,7 +15,7 @@ export class SfxNode extends HowlNode {
       type: 'sfx',
       poolSize: props.poolSize ?? 20,
     })
-    this.maxConcurrent = props.maxConcurrent ?? 20
+    this._maxConcurrent = props.maxConcurrent ?? 20
   }
 
   public async play(options: {
@@ -30,23 +30,23 @@ export class SfxNode extends HowlNode {
     if (waitTime > 0) {
       return new Promise((resolve) => {
         const timeoutId = window.setTimeout(async () => {
-          this.pendingTimeouts.delete(timeoutId)
-          resolve(await this.playSfx(src, loop, volume))
+          this._pendingTimeouts.delete(timeoutId)
+          resolve(await this._playSfx(src, loop, volume))
         }, waitTime)
-        this.pendingTimeouts.add(timeoutId)
+        this._pendingTimeouts.add(timeoutId)
       })
     }
 
-    return this.playSfx(src, loop, volume)
+    return this._playSfx(src, loop, volume)
   }
 
-  private async playSfx(src: string, loopCount: number, volume: number): Promise<SoundInstance> {
-    const howlInstance = this.getHowlInstance({ src })
+  private async _playSfx(src: string, loopCount: number, volume: number): Promise<SoundInstance> {
+    const howlInstance = this._getHowlInstance({ src })
 
-    this.checkMaxConcurrent()
+    this._checkMaxConcurrent()
 
     try {
-      await this.waitLoaded(howlInstance.howl)
+      await this._waitLoaded(howlInstance.howl)
       const soundId = howlInstance.howl.play()
       const isInfinite = loopCount === -1 || loopCount === Infinity
 
@@ -65,33 +65,33 @@ export class SfxNode extends HowlNode {
           remaining--
           howlInstance.howl.play(id)
         } else if (!isInfinite) {
-          this.cleanup(howlInstance, soundId)
+          this._cleanup(howlInstance, soundId)
           howlInstance.howl.off('end', onEnd, id)
         }
       }
 
       howlInstance.howl.on('end', onEnd, soundId)
 
-      howlInstance.howl.once('playerror', () => this.cleanup(howlInstance, soundId), soundId)
+      howlInstance.howl.once('playerror', () => this._cleanup(howlInstance, soundId), soundId)
 
       return instance
     } catch (error) {
-      this.howls.delete(src)
+      this._howls.delete(src)
       Logger.error('Sfx Node Play Error:', error)
       return Promise.reject(error)
     }
   }
 
-  private cleanup(howlInstance: HowlInstance, soundId: number) {
-    this.removeAudioInstance(howlInstance, soundId)
+  private _cleanup(howlInstance: HowlInstance, soundId: number) {
+    this._removeAudioInstance(howlInstance, soundId)
   }
 
-  private checkMaxConcurrent() {
-    if (this.totalActiveCount >= this.maxConcurrent) {
+  private _checkMaxConcurrent() {
+    if (this._totalActiveCount >= this._maxConcurrent) {
 
       let oldest: { howlInstance: HowlInstance; sound: SoundInstance } | null = null
 
-      for (const item of this.activeSoundsIterator()) {
+      for (const item of this._activeSoundsIterator()) {
         if (!oldest || item.sound.startTime < oldest.sound.startTime) {
           oldest = item
         }
@@ -104,19 +104,19 @@ export class SfxNode extends HowlNode {
   }
 
   public async stop(target: number | string, fade: number = 0) {
-    this.howls.forEach(howlInstance => {
+    this._howls.forEach(howlInstance => {
       const soundsToStop = Array.from(howlInstance.sounds.values()).filter(s =>
         typeof target === 'number' ? s.id === target : howlInstance.src === target
       )
 
       soundsToStop.forEach(async sound => {
-        await this.fadeHowl(howlInstance, {
+        await this._fadeHowl(howlInstance, {
           volume: 0,
           fade,
           soundId: sound.id,
           onComplete: () => {
             howlInstance.howl.stop(sound.id)
-            this.removeAudioInstance(howlInstance, sound.id)
+            this._removeAudioInstance(howlInstance, sound.id)
           }
         })
       })
@@ -124,13 +124,13 @@ export class SfxNode extends HowlNode {
   }
 
   public override stopAll(fade: number = 0) {
-    this.pendingTimeouts.forEach(id => clearTimeout(id))
-    this.pendingTimeouts.clear()
+    this._pendingTimeouts.forEach(id => clearTimeout(id))
+    this._pendingTimeouts.clear()
     super.stopAll(fade)
   }
 
   public override destroy(): void {
-    this.pendingTimeouts.forEach(id => clearTimeout(id))
+    this._pendingTimeouts.forEach(id => clearTimeout(id))
     super.destroy()
   }
 }

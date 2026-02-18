@@ -5,15 +5,16 @@ import { BaseNode, type BaseNodeProps } from '../BaseNode'
 export type BgmNodeProps = Omit<BaseNodeProps, 'type' | 'tagName'>
 
 export class BgmNode extends BaseNode {
-  private audios: [HTMLAudioElement, HTMLAudioElement]
-  private currentIndex: number = 0
-  private targetVolume: number = 1
+
+  private _audios: [HTMLAudioElement, HTMLAudioElement]
+  private _currentIndex: number = 0
+  private _targetVolume: number = 1
 
   constructor(props: BgmNodeProps) {
     super({ ...props, type: 'bgm' })
 
-    this.audios = [new Audio(), new Audio()]
-    this.audios.forEach(audio => {
+    this._audios = [new Audio(), new Audio()]
+    this._audios.forEach(audio => {
       audio.loop = true
       audio.preload = 'auto'
       audio.crossOrigin = 'anonymous'
@@ -23,99 +24,108 @@ export class BgmNode extends BaseNode {
   public async play(options: { src?: string, loop?: boolean; volume?: number; fade?: number } = {}): Promise<void> {
     const fade = options.fade ?? 0
     if (options.volume !== undefined)
-      this.targetVolume = options.volume
+      this._targetVolume = options.volume
 
     if (!options.src) {
-      if (this.audio.src) {
-        this.audio.loop = options.loop ?? this.loop
-        if (this.audio.paused) {
-          this.audio.volume = 0
-          await this.audio.play()
+      if (this._audio.src) {
+        this._audio.loop = options.loop ?? this.loop
+        if (this._audio.paused) {
+          this._audio.volume = 0
+          await this._audio.play()
         }
-        return await this.setVolume({ index: this.currentIndex, volume: this.targetVolume, fade })
+        return await this._setVolume({ index: this._currentIndex, volume: this._targetVolume, fade })
       }
       return
     }
 
-    const oldIndex = this.currentIndex
-    const newIndex = (this.currentIndex + 1) % 2
-    // const oldAudio = this.audios[oldIndex]
-    const newAudio = this.audios[newIndex]
+    const oldIndex = this._currentIndex
+    const newIndex = (this._currentIndex + 1) % 2
+
+    this._currentIndex = newIndex
+
+    const oldAudio = this._audios[oldIndex]
+    const newAudio = this._audios[newIndex]
 
     newAudio.src = options.src
     newAudio.loop = options.loop ?? this.loop
-    newAudio.volume = fade > 0 ? 0 : this.targetVolume
-
-    newAudio.load()
-    await new Promise((resolve) => {
-      newAudio.addEventListener('canplaythrough', resolve, { once: true })
-    })
+    newAudio.volume = fade > 0 ? 0 : this._targetVolume
 
     try {
+      newAudio.load()
+      await new Promise((resolve) => {
+        newAudio.addEventListener('canplaythrough', resolve, { once: true })
+      })
+
       await newAudio.play()
     } catch (e) {
       Logger.error('Playback error:', e)
-      this.stopAudio(newIndex)
+      this._stopAudio(newAudio)
+      this._currentIndex = oldIndex
       return
     }
 
-    this.currentIndex = newIndex
-
     if (fade > 0) {
       await Promise.all([
-        this.setVolume({ index: oldIndex, volume: 0, fade, stopOnEnd: true }),
-        this.setVolume({ index: newIndex, volume: this.targetVolume, fade })
+        this._setVolume({ index: oldIndex, volume: 0, fade, stopOnEnd: true }),
+        this._setVolume({ index: newIndex, volume: this._targetVolume, fade })
       ])
     } else {
-      this.stopAudio(oldIndex)
+      this._stopAudio(oldAudio)
     }
   }
 
   public async pause(fade: number = 0): Promise<void> {
     if (fade > 0) {
-      await this.setVolume({ index: this.currentIndex, volume: 0, fade, pauseOnEnd: true })
+      await this._setVolume({ index: this._currentIndex, volume: 0, fade, pauseOnEnd: true })
     } else {
-      this.audio.pause()
+      this._audio.pause()
     }
   }
 
   public async stop(fade: number = 0): Promise<void> {
     if (fade > 0) {
-      await this.setVolume({ index: this.currentIndex, volume: 0, fade, stopOnEnd: true })
+      await this._setVolume({ index: this._currentIndex, volume: 0, fade, stopOnEnd: true })
     } else {
-      this.audios.forEach((_, i) => this.stopAudio(i))
+      this._audios.forEach((_, i) => this._stopAudio(this._audios[i]))
     }
   }
 
-  public fade(volume: number, fade: number = 0): Promise<void> {
-    this.targetVolume = volume
-    return this.setVolume({ index: this.currentIndex, volume, fade })
+  public async fade(volume: number, fade: number = 0): Promise<void> {
+    this._targetVolume = volume
+    return this._setVolume({ index: this._currentIndex, volume, fade })
   }
 
-  public resume(fade: number = 0): Promise<void> {
+  public async resume(fade: number = 0): Promise<void> {
     return this.play({ fade })
   }
 
-  private get audio() { return this.audios[this.currentIndex] }
+  private get _audio() { return this._audios[this._currentIndex] }
 
-  public get volume() { return this.audio.volume }
+  public get currentTime() { return this._audio.currentTime }
+  public set currentTime(value: number) { this._audio.currentTime = value }
+
+  public get duration() { return this._audio.duration }
+
+  public get paused() { return this._audio.paused }
+
+  public get volume() { return this._audio.volume }
   public set volume(value: number) {
-    this.targetVolume = value
-    gsap.killTweensOf(this.audio, 'volume')
-    this.audio.volume = Math.max(0, Math.min(1, value))
+    this._targetVolume = value
+    gsap.killTweensOf(this._audio, 'volume')
+    this._audio.volume = Math.max(0, Math.min(1, value))
   }
 
-  public get loop() { return this.audio.loop }
-  public set loop(value: boolean) { this.audios.forEach(a => a.loop = value) }
+  public get loop() { return this._audio.loop }
+  public set loop(value: boolean) { this._audios.forEach(a => a.loop = value) }
 
-  public get muted() { return this.audio.muted }
-  public set muted(value: boolean) { this.audios.forEach(a => a.muted = value) }
+  public get muted() { return this._audio.muted }
+  public set muted(value: boolean) { this._audios.forEach(a => a.muted = value) }
 
-  private setVolume(
+  private _setVolume(
     { index, volume, fade, stopOnEnd, pauseOnEnd }
       : { index: number, volume: number, fade: number, stopOnEnd?: boolean, pauseOnEnd?: boolean }
   ): Promise<void> {
-    const audio = this.audios[index]
+    const audio = this._audios[index]
 
     if (!audio.src) return Promise.resolve()
 
@@ -124,7 +134,7 @@ export class BgmNode extends BaseNode {
     return new Promise((resolve) => {
       if (fade <= 0) {
         audio.volume = volume
-        if (stopOnEnd) this.stopAudio(index)
+        if (stopOnEnd) this._stopAudio(audio)
         resolve()
         return
       }
@@ -136,7 +146,7 @@ export class BgmNode extends BaseNode {
         overwrite: 'auto',
         onComplete: () => {
           if (stopOnEnd)
-            this.stopAudio(index)
+            this._stopAudio(audio)
           else if (pauseOnEnd)
             audio.pause()
           resolve()
@@ -146,8 +156,7 @@ export class BgmNode extends BaseNode {
     })
   }
 
-  private stopAudio(index: number) {
-    const audio = this.audios[index]
+  private _stopAudio(audio: HTMLAudioElement) {
     gsap.killTweensOf(audio, 'volume')
     audio.pause()
     audio.src = ''
