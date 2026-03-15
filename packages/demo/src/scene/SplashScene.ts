@@ -13,8 +13,8 @@ export class SplashScene extends SceneNode {
       id: 'tip',
       data: { text: 'Press Any Key To Start' },
       transform: {
-        x: this.stage.data.width / 2,
-        y: this.stage.data.height - 100,
+        x: this.sceneTree.data.width / 2,
+        y: this.sceneTree.data.height - 100,
         width: 400,
         anchorX: 0.5,
         opacity: 0
@@ -39,7 +39,7 @@ export class SplashScene extends SceneNode {
 
   async onStart() {
     await this.waitClick(
-      this.stage,
+      this.sceneTree,
       () => {
         const silentAudio = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==');
         silentAudio.play();

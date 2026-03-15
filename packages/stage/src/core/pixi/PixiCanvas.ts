@@ -12,7 +12,7 @@ export class PixiCanvas extends DomNode<HTMLCanvasElement> {
   constructor(props: Omit<NodeProps, 'type' | 'tagName'>) {
     super({
       ...props,
-      type: 'pixi-stage',
+      type: 'pixi-canvas',
       tagName: 'canvas',
     })
 

@@ -32,8 +32,8 @@ export class ScenarioScene extends SceneNode<ScenarioSceneData> {
       id: 'dialog-box',
       type: 'container',
       transform: {
-        x: this.stage.data.width / 2,
-        width: this.stage.data.width * 0.7,
+        x: this.sceneTree.data.width / 2,
+        width: this.sceneTree.data.width * 0.7,
         height: 240,
         opacity: 0,
         zIndex: 10,
@@ -106,7 +106,7 @@ export class ScenarioScene extends SceneNode<ScenarioSceneData> {
   private async execBg(cmd: { src: string, fade?: number }) {
     let bg = this.findImage('bg');
     if (!bg) {
-      bg = this.createImage('bg', cmd.src, { width: this.stage.data.width, height: this.stage.data.height, opacity: 0 });
+      bg = this.createImage('bg', cmd.src, { width: this.sceneTree.data.width, height: this.sceneTree.data.height, opacity: 0 });
     }
     await bg.to({ opacity: 1, duration: cmd.fade ?? 1 });
   }
@@ -115,8 +115,8 @@ export class ScenarioScene extends SceneNode<ScenarioSceneData> {
     let image = this.findImage(cmd.id);
     if (!image) {
       const defaultTransform: ScriptTransform = {
-        x: this.stage.data.width / 2,
-        y: this.stage.data.height / 2,
+        x: this.sceneTree.data.width / 2,
+        y: this.sceneTree.data.height / 2,
         anchorX: 0.5,
         anchorY: 0.5,
         ...cmd.transform
@@ -160,8 +160,8 @@ export class ScenarioScene extends SceneNode<ScenarioSceneData> {
       renderer: 'dom',
       data: { src: cmd.src },
       transform: {
-        width: this.stage.data.width,
-        height: this.stage.data.height,
+        width: this.sceneTree.data.width,
+        height: this.sceneTree.data.height,
         opacity: 0,
         zIndex: 999,
       },

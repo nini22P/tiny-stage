@@ -21,9 +21,10 @@ export abstract class OverlayNode extends DomNode {
       },
       dom: {
         styles: {
-          backgroundColor: 'rgba(0,0,0,0.5)',
           display: 'none',
-          ...rest.dom?.styles
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          pointerEvents: 'auto',
+          ...rest.dom?.styles,
         }
       }
     });

@@ -15,7 +15,7 @@ export class MainMenuScene extends SceneNode {
     this.addImage({
       id: 'bg',
       src: './image/bg/main_menu.webp',
-      transform: { width: this.stage.data.width, height: this.stage.data.height }
+      transform: { width: this.sceneTree.data.width, height: this.sceneTree.data.height }
     });
 
     this.bgm.play({ src: './audio/bgm/pure_morning_0.mp3', fade: 1, loop: true });
@@ -24,7 +24,7 @@ export class MainMenuScene extends SceneNode {
       id: 'btn-group',
       type: 'container',
       transform: {
-        x: this.stage.data.width / 2,
+        x: this.sceneTree.data.width / 2,
         y: 600,
         width: 300,
         height: 300,
