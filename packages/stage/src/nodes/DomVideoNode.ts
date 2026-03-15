@@ -1,6 +1,6 @@
 import { Logger } from '../utils/Logger'
-import { DomBaseNode } from '../core/dom/DomBaseNode'
-import type { NodeProps } from '../core/base/BaseNode'
+import { DomNode } from '../core/dom/DomNode'
+import type { NodeProps } from '../core/base/Node2D'
 
 export interface DomVideoNodeData {
   src: string;
@@ -9,7 +9,7 @@ export interface DomVideoNodeData {
   autoplay?: boolean;
 }
 
-export class DomVideoNode extends DomBaseNode<HTMLVideoElement, DomVideoNodeData> {
+export class DomVideoNode extends DomNode<HTMLVideoElement, DomVideoNodeData> {
   constructor(props: Omit<NodeProps<DomVideoNodeData>, 'type' | 'tagName'>) {
     super({
       ...props,

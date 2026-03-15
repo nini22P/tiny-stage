@@ -1,13 +1,13 @@
-import { type BaseNode, type Stage, DomBaseNode } from "tiny-stage";
+import { type Node2D, type Stage, DomNode } from "tiny-stage";
 import type { SceneNode, SceneNodeProps } from "../scene/SceneNode";
 
 export class SceneManager {
   private static _instance: SceneManager;
   private currentScene: SceneNode | null = null;
   private stage: Stage;
-  private container: BaseNode;
+  private container: Node2D;
 
-  constructor(stage: Stage, container: BaseNode) {
+  constructor(stage: Stage, container: Node2D) {
     this.stage = stage;
     this.container = container;
     SceneManager._instance = this;
@@ -30,7 +30,7 @@ export class SceneManager {
     this.currentScene = newScene;
 
     if (oldScene) {
-      if (oldScene instanceof DomBaseNode) {
+      if (oldScene instanceof DomNode) {
         oldScene.renderObject.style.pointerEvents = 'none';
       }
 

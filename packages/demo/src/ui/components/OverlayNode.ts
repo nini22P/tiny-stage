@@ -1,10 +1,10 @@
-import { DomBaseNode, Stage, type NodeProps } from "tiny-stage";
+import { DomNode, Stage, type NodeProps } from "tiny-stage";
 
 export interface OverlayNodeProps extends Omit<NodeProps, 'type' | 'renderer'> {
   stage: Stage;
 }
 
-export class OverlayNode extends DomBaseNode {
+export class OverlayNode extends DomNode {
   protected stage: Stage
 
   constructor(props: OverlayNodeProps) {

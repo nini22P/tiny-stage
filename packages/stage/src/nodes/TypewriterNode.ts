@@ -1,6 +1,6 @@
 import gsap from 'gsap'
-import { DomBaseNode } from '../core/dom/DomBaseNode'
-import type { NodeProps } from '../core/base/BaseNode'
+import { DomNode } from '../core/dom/DomNode'
+import type { NodeProps } from '../core/base/Node2D'
 
 export interface TypewriterNodeData {
   text?: string;
@@ -11,7 +11,7 @@ export interface TypewriterOptions {
   onChar?: (char: string, index: number) => void;
 }
 
-export class TypewriterNode extends DomBaseNode<HTMLParagraphElement, TypewriterNodeData> {
+export class TypewriterNode extends DomNode<HTMLParagraphElement, TypewriterNodeData> {
   private _typeTween?: gsap.core.Tween
 
   constructor(props: Omit<NodeProps<TypewriterNodeData>, 'type' | 'tagName'>) {

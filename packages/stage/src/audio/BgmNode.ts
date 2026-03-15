@@ -1,9 +1,9 @@
 import gsap from 'gsap'
 import { Logger } from '../utils/Logger'
-import type { NodeProps } from '../core/base/BaseNode'
-import { DomBaseNode } from '../core/dom/DomBaseNode'
+import type { NodeProps } from '../core/base/Node2D'
+import { DomNode } from '../core/dom/DomNode'
 
-export class BgmNode extends DomBaseNode {
+export class BgmNode extends DomNode {
 
   private _audios: [HTMLAudioElement, HTMLAudioElement]
   private _currentIndex: number = 0

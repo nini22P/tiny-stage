@@ -1,9 +1,9 @@
 import gsap from 'gsap'
 import { Logger, LogLevel } from '../utils/Logger'
-import { BaseNode, type NodeKeyframe, type NodeProps, type NodeTransform } from './base/BaseNode'
-import { DomBaseNode } from './dom/DomBaseNode'
+import { Node2D, type NodeKeyframe, type NodeProps, type NodeTransform } from './base/Node2D'
+import { DomNode } from './dom/DomNode'
 import * as PIXI from 'pixi.js'
-import { PixiBaseNode } from './pixi/PixiBaseNode'
+import { PixiNode } from './pixi/PixiNode'
 
 export interface SceneProps {
   id: string;
@@ -17,7 +17,7 @@ export interface NodeAction {
   params?: Record<string, unknown>;
 }
 
-export type AnyNode = DomBaseNode<HTMLElement, unknown> | PixiBaseNode<PIXI.Container, unknown>
+export type AnyNode = DomNode<HTMLElement, unknown> | PixiNode<PIXI.Container, unknown>
 
 type NodeConstructor = new (props: NodeProps<unknown>) => AnyNode
 
@@ -28,7 +28,7 @@ export interface StageConfig {
   debug?: boolean;
 }
 
-export class Stage extends DomBaseNode<HTMLElement, StageConfig> {
+export class Stage extends DomNode<HTMLElement, StageConfig> {
   private static _domRegistry = new Map<string, NodeConstructor>()
   private static _pixiRegistry = new Map<string, NodeConstructor>()
 
@@ -40,13 +40,13 @@ export class Stage extends DomBaseNode<HTMLElement, StageConfig> {
     renderer: 'dom' | 'pixi' = 'dom'
   ): void {
     if (renderer === 'dom') {
-      if (!(nodeClass.prototype instanceof DomBaseNode)) {
-        Logger.warn(`Registering DOM node ${type} but class does not extend DomBaseNode`)
+      if (!(nodeClass.prototype instanceof DomNode)) {
+        Logger.warn(`Registering DOM node ${type} but class does not extend DomNode`)
       }
       this._domRegistry.set(type, nodeClass)
     } else {
-      if (!(nodeClass.prototype instanceof PixiBaseNode)) {
-        Logger.warn(`Registering Pixi node ${type} but class does not extend PixiBaseNode`)
+      if (!(nodeClass.prototype instanceof PixiNode)) {
+        Logger.warn(`Registering Pixi node ${type} but class does not extend PixiNode`)
       }
       this._pixiRegistry.set(type, nodeClass)
     }
@@ -141,7 +141,7 @@ export class Stage extends DomBaseNode<HTMLElement, StageConfig> {
     Logger.debug(`Scene applied in ${duration.toFixed(2)}ms, active nodes: ${this._allNodes.size}`)
   }
 
-  private _reconcileNodes(schemas: NodeProps[], parent: BaseNode<unknown>, seenIds: Set<string>): void {
+  private _reconcileNodes(schemas: NodeProps[], parent: Node2D<unknown>, seenIds: Set<string>): void {
     schemas.forEach(schema => {
       seenIds.add(schema.id)
       let node = this._allNodes.get(schema.id)
@@ -178,10 +178,10 @@ export class Stage extends DomBaseNode<HTMLElement, StageConfig> {
 
     if (renderer === 'dom') {
       NodeClass = Stage._domRegistry.get(schema.type)
-      if (!NodeClass) NodeClass = DomBaseNode
+      if (!NodeClass) NodeClass = DomNode
     } else {
       NodeClass = Stage._pixiRegistry.get(schema.type)
-      if (!NodeClass) NodeClass = PixiBaseNode as unknown as NodeConstructor
+      if (!NodeClass) NodeClass = PixiNode as unknown as NodeConstructor
     }
 
     const node = new NodeClass({

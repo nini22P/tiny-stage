@@ -1,11 +1,11 @@
-import { DomBaseNode } from '../core/dom/DomBaseNode'
-import type { NodeProps } from '../core/base/BaseNode'
+import { DomNode } from '../core/dom/DomNode'
+import type { NodeProps } from '../core/base/Node2D'
 
 export interface DomTextNodeData {
   text: string;
 }
 
-export class DomTextNode extends DomBaseNode<HTMLDivElement, DomTextNodeData> {
+export class DomTextNode extends DomNode<HTMLDivElement, DomTextNodeData> {
   constructor(props: Omit<NodeProps<DomTextNodeData>, 'type' | 'tagName' | 'renderer'>) {
     super({
       ...props,

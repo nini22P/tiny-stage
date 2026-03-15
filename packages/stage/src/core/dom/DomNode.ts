@@ -1,8 +1,8 @@
 import gsap from 'gsap'
-import { BaseNode, DEFAUL_TRANSFORM, type NodeProps, type NodeTransform } from '../base/BaseNode'
+import { Node2D, DEFAUL_TRANSFORM, type NodeProps, type NodeTransform } from '../base/Node2D'
 import { Logger } from '../../utils/Logger'
 
-export class DomBaseNode<T extends HTMLElement = HTMLDivElement, TData = Record<string, unknown>> extends BaseNode<TData> {
+export class DomNode<T extends HTMLElement = HTMLDivElement, TData = Record<string, unknown>> extends Node2D<TData> {
   public transform: NodeTransform
   protected _element: T
 
@@ -59,19 +59,19 @@ export class DomBaseNode<T extends HTMLElement = HTMLDivElement, TData = Record<
     }
   }
 
-  protected _onChildAdded(node: BaseNode<unknown>): void {
-    if (node instanceof DomBaseNode) {
+  protected _onChildAdded(node: Node2D<unknown>): void {
+    if (node instanceof DomNode) {
       this._element.appendChild(node.renderObject)
     } else {
-      Logger.error(`Cannot add non-DomBaseNode to DomBaseNode: ${node.type}`)
+      Logger.error(`Cannot add non-DomNode to DomNode: ${node.type}`)
     }
   }
 
-  protected _onChildRemoved(node: BaseNode<unknown>): void {
-    if (node instanceof DomBaseNode) {
+  protected _onChildRemoved(node: Node2D<unknown>): void {
+    if (node instanceof DomNode) {
       this._element.removeChild(node.renderObject)
     } else {
-      Logger.error(`Cannot remove non-DomBaseNode from DomBaseNode: ${node.type}`)
+      Logger.error(`Cannot remove non-DomNode from DomNode: ${node.type}`)
     }
   }
 

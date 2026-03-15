@@ -1,9 +1,9 @@
 import gsap from 'gsap'
-import { BaseNode, DEFAUL_TRANSFORM, type NodeProps, type PixiNodeTransform } from '../base/BaseNode'
+import { Node2D, DEFAUL_TRANSFORM, type NodeProps, type PixiNodeTransform } from '../base/Node2D'
 import * as PIXI from 'pixi.js'
 import { Logger } from '../../utils/Logger'
 
-export class PixiBaseNode<T extends PIXI.Container = PIXI.Container, TData = Record<string, unknown>> extends BaseNode<TData> {
+export class PixiNode<T extends PIXI.Container = PIXI.Container, TData = Record<string, unknown>> extends Node2D<TData> {
   public transform: PixiNodeTransform
   protected _container: T
 
@@ -46,19 +46,19 @@ export class PixiBaseNode<T extends PIXI.Container = PIXI.Container, TData = Rec
     }
   }
 
-  protected _onChildAdded(node: BaseNode<unknown>): void {
-    if (node instanceof PixiBaseNode) {
+  protected _onChildAdded(node: Node2D<unknown>): void {
+    if (node instanceof PixiNode) {
       this._container.addChild(node.renderObject)
     } else {
-      Logger.error(`Cannot add non-PixiBaseNode to PixiBaseNode: ${node.type}`)
+      Logger.error(`Cannot add non-PixiNode to PixiNode: ${node.type}`)
     }
   }
 
-  protected _onChildRemoved(node: BaseNode<unknown>): void {
-    if (node instanceof PixiBaseNode) {
+  protected _onChildRemoved(node: Node2D<unknown>): void {
+    if (node instanceof PixiNode) {
       this._container.removeChild(node.renderObject)
     } else {
-      Logger.error(`Cannot remove non-PixiBaseNode from PixiBaseNode: ${node.type}`)
+      Logger.error(`Cannot remove non-PixiNode from PixiNode: ${node.type}`)
     }
   }
 

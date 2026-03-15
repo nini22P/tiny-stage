@@ -1,6 +1,6 @@
 import { OverlayNode, type OverlayNodeProps } from '../components/OverlayNode';
 import { ButtonNode } from '../components/ButtonNode';
-import { DomBaseNode, DomTextNode } from 'tiny-stage';
+import { DomNode, DomTextNode } from 'tiny-stage';
 
 export class ConfirmOverlay extends OverlayNode {
   private _message: DomTextNode;
@@ -9,7 +9,7 @@ export class ConfirmOverlay extends OverlayNode {
   constructor(props: OverlayNodeProps) {
     super(props);
 
-    const panel = new DomBaseNode({
+    const panel = new DomNode({
       id: 'confirm-panel',
       type: 'container',
       transform: {

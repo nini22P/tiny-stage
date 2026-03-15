@@ -1,12 +1,12 @@
-import { DomBaseNode, BgmNode, SfxNode, DomImageNode, Stage, type NodeProps } from 'tiny-stage'
+import { DomNode, BgmNode, SfxNode, DomImageNode, Stage, type NodeProps } from 'tiny-stage'
 import type { ScriptTransform } from './ScenarioScene'
 
 export interface SceneNodeProps<TData = any> extends Omit<NodeProps<TData>, 'type' | 'renderer'> {
   stage: Stage;
 }
 
-export abstract class SceneNode<TData = any> extends DomBaseNode<HTMLElement, TData> {
-  protected camera: DomBaseNode
+export abstract class SceneNode<TData = any> extends DomNode<HTMLElement, TData> {
+  protected camera: DomNode
   protected bgm: BgmNode
   protected sfx: SfxNode
   protected stage: Stage
@@ -25,7 +25,7 @@ export abstract class SceneNode<TData = any> extends DomBaseNode<HTMLElement, TD
 
     this.stage = stage;
 
-    this.camera = new DomBaseNode({
+    this.camera = new DomNode({
       id: `${props.id}-camera`,
       type: 'camera',
       transform: { width: this.stage.data.width, height: this.stage.data.height }
@@ -43,10 +43,10 @@ export abstract class SceneNode<TData = any> extends DomBaseNode<HTMLElement, TD
   abstract onEnd(): Promise<void>;
 
   protected async waitClick(
-    target: DomBaseNode<any, any> | HTMLElement | Stage = this.stage,
+    target: DomNode<any, any> | HTMLElement | Stage = this.stage,
     callback?: () => boolean | void
   ): Promise<void> {
-    const element = target instanceof DomBaseNode ? target.renderObject : (target as any);
+    const element = target instanceof DomNode ? target.renderObject : (target as any);
     return new Promise<void>(resolve => {
       const handler = (_event: MouseEvent | TouchEvent) => {
         if (callback?.() === true) return;
@@ -61,7 +61,7 @@ export abstract class SceneNode<TData = any> extends DomBaseNode<HTMLElement, TD
 
   protected addImage(
     { id, src, target = this.camera, transform }
-      : { id: string, src: string, target?: DomBaseNode, transform?: ScriptTransform }
+      : { id: string, src: string, target?: DomNode, transform?: ScriptTransform }
   ): DomImageNode {
     const node = new DomImageNode({
       id,

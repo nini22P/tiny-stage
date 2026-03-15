@@ -1,7 +1,7 @@
 import gsap from 'gsap'
 import { Howl } from 'howler'
-import { DomBaseNode } from '../core/dom/DomBaseNode'
-import type { NodeProps } from '../core/base/BaseNode'
+import { DomNode } from '../core/dom/DomNode'
+import type { NodeProps } from '../core/base/Node2D'
 
 export interface SoundInstance {
   id: number;
@@ -21,7 +21,7 @@ export interface HowlNodeProps extends NodeProps {
   poolSize?: number
 }
 
-export abstract class HowlNode extends DomBaseNode {
+export abstract class HowlNode extends DomNode {
   protected _howls: Map<string, HowlInstance> = new Map()
   protected _poolSize: number
 

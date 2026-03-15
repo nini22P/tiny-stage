@@ -1,4 +1,4 @@
-import { DomBaseNode, DomImageNode, TypewriterNode, DomVideoNode, type NodeTransform } from "tiny-stage";
+import { DomNode, DomImageNode, TypewriterNode, DomVideoNode, type NodeTransform } from "tiny-stage";
 import { SceneNode, type SceneNodeProps } from "./SceneNode";
 
 export type ScriptTransform = NodeTransform & gsap.TweenVars;
@@ -20,15 +20,15 @@ export interface ScenarioSceneData {
 export interface ScenarioSceneProps extends SceneNodeProps<ScenarioSceneData> { }
 
 export class ScenarioScene extends SceneNode<ScenarioSceneData> {
-  protected dialogBox: DomBaseNode;
+  protected dialogBox: DomNode;
   protected typewriter: TypewriterNode;
   protected nameElement: HTMLElement;
-  protected nameBox: DomBaseNode;
+  protected nameBox: DomNode;
 
   constructor(props: ScenarioSceneProps) {
     super(props);
 
-    const dialogBox = new DomBaseNode({
+    const dialogBox = new DomNode({
       id: 'dialog-box',
       type: 'container',
       transform: {
@@ -60,7 +60,7 @@ export class ScenarioScene extends SceneNode<ScenarioSceneData> {
     })
     dialogBox.addNode(typewriter)
 
-    const nameBox = new DomBaseNode({
+    const nameBox = new DomNode({
       id: 'name-box',
       type: 'container',
       transform: { x: 40, y: -40, width: 200, height: 50 },

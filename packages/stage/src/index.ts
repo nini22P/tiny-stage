@@ -1,7 +1,7 @@
-export * from './core/base/BaseNode'
-export * from './core/dom/DomBaseNode'
-export * from './core/pixi/PixiBaseNode'
-export * from './core/pixi/PixiStageNode'
+export * from './core/base/Node2D'
+export * from './core/dom/DomNode'
+export * from './core/pixi/PixiNode'
+export * from './core/pixi/PixiStage'
 export * from './core/Stage'
 
 export * from './nodes/DomImageNode'

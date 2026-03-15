@@ -1,7 +1,7 @@
 import { SplashScene } from './scene/SplashScene';
 import { SceneManager } from './manager/SceneManager';
 import './style.css'
-import { Stage, DomBaseNode } from 'tiny-stage'
+import { Stage, DomNode } from 'tiny-stage'
 import { UIManager } from './manager/UIManager';
 import CONFIG from './config/Config';
 
@@ -12,7 +12,7 @@ const run = async () => {
     data: CONFIG,
   });
 
-  const sceneContainer = new DomBaseNode({
+  const sceneContainer = new DomNode({
     id: 'scene-container',
     type: 'container',
     transform: { width: stage.data.width, height: stage.data.height }
@@ -21,7 +21,7 @@ const run = async () => {
 
   new SceneManager(stage, sceneContainer);
 
-  const uiContainer = new DomBaseNode({
+  const uiContainer = new DomNode({
     id: 'ui-container',
     type: 'container',
     transform: {

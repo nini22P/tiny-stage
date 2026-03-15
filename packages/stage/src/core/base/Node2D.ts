@@ -1,6 +1,6 @@
 import gsap from 'gsap'
-import type { DomBaseNode } from '../dom/DomBaseNode'
-import type { PixiBaseNode } from '../pixi/PixiBaseNode'
+import type { DomNode } from '../dom/DomNode'
+import type { PixiNode } from '../pixi/PixiNode'
 
 export const DEFAUL_TRANSFORM: NodeTransform | PixiNodeTransform = {
   x: 0,
@@ -53,7 +53,7 @@ export interface NodeKeyframe extends NodeTransform {
   duration: number;
 }
 
-export abstract class BaseNode<TData = Record<string, unknown>> {
+export abstract class Node2D<TData = Record<string, unknown>> {
   public id: string
   public type: string
   public renderer: 'dom' | 'pixi'
@@ -64,8 +64,8 @@ export abstract class BaseNode<TData = Record<string, unknown>> {
   public domConfig?: DomConfig
   public pixiConfig?: PixiConfig
 
-  protected _children: BaseNode<unknown>[] = []
-  protected _parent: BaseNode<unknown> | null = null
+  protected _children: Node2D<unknown>[] = []
+  protected _parent: Node2D<unknown> | null = null
   protected _isDestroyed = false
 
   constructor(props: NodeProps<TData>) {
@@ -115,7 +115,7 @@ export abstract class BaseNode<TData = Record<string, unknown>> {
     })
   }
 
-  public addNode(node: BaseNode<unknown>): this {
+  public addNode(node: Node2D<unknown>): this {
     if (node._parent) node._parent.removeNode(node)
     this._children.push(node)
     node._parent = this
@@ -123,7 +123,7 @@ export abstract class BaseNode<TData = Record<string, unknown>> {
     return this
   }
 
-  public removeNode(node: BaseNode<unknown>): this {
+  public removeNode(node: Node2D<unknown>): this {
     const index = this._children.indexOf(node)
     if (index !== -1) {
       this._children.splice(index, 1)
@@ -146,11 +146,11 @@ export abstract class BaseNode<TData = Record<string, unknown>> {
     }
   }
 
-  public isDomNode(): this is DomBaseNode {
+  public isDomNode(): this is DomNode {
     return this.renderer === 'dom'
   }
 
-  public isPixiNode(): this is PixiBaseNode {
+  public isPixiNode(): this is PixiNode {
     return this.renderer === 'pixi'
   }
 
@@ -171,7 +171,7 @@ export abstract class BaseNode<TData = Record<string, unknown>> {
 
   protected _applyData(_data: Partial<TData>): void { }
   protected _syncToRenderer(_transform: (NodeTransform | PixiNodeTransform) & (gsap.TweenVars | gsap.TweenVars['pixi']), _immediate: boolean): void { }
-  protected _onChildAdded(_node: BaseNode<unknown>): void { }
-  protected _onChildRemoved(_node: BaseNode<unknown>): void { }
+  protected _onChildAdded(_node: Node2D<unknown>): void { }
+  protected _onChildRemoved(_node: Node2D<unknown>): void { }
   protected _onDestroy(): void { }
 }

@@ -1,4 +1,4 @@
-import { DomBaseNode, type NodeProps } from 'tiny-stage'
+import { DomNode, type NodeProps } from 'tiny-stage'
 import gsap from 'gsap'
 
 export interface ButtonNodeData {
@@ -9,7 +9,7 @@ export interface ButtonNodeProps extends Omit<NodeProps<ButtonNodeData>, 'type' 
   onClick: () => void;
 }
 
-export class ButtonNode extends DomBaseNode<HTMLElement, ButtonNodeData> {
+export class ButtonNode extends DomNode<HTMLElement, ButtonNodeData> {
   constructor(props: ButtonNodeProps) {
     super({
       ...props,

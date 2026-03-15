@@ -1,7 +1,7 @@
 import { SceneNode, type SceneNodeProps } from './SceneNode';
 import { SceneManager } from '../manager/SceneManager';
 import { ButtonNode } from '../ui/components/ButtonNode';
-import { DomBaseNode } from 'tiny-stage';
+import { DomNode } from 'tiny-stage';
 import { ScenarioScene } from './ScenarioScene';
 import { UIManager } from '../manager/UIManager';
 import { script } from '../config/Script';
@@ -20,7 +20,7 @@ export class MainMenuScene extends SceneNode {
 
     this.bgm.play({ src: './audio/bgm/pure_morning_0.mp3', fade: 1, loop: true });
 
-    const btnGroup = new DomBaseNode({
+    const btnGroup = new DomNode({
       id: 'btn-group',
       type: 'container',
       transform: {

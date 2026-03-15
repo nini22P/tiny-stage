@@ -1,4 +1,4 @@
-import { type BaseNode, type Stage } from "tiny-stage";
+import { type Node2D, type Stage } from "tiny-stage";
 import { SettingsOverlay } from "../ui/overlays/SettingsOverlay";
 import { ConfirmOverlay } from '../ui/overlays/ConfirmOverlay';
 
@@ -9,9 +9,9 @@ export class UIManager {
   public confirm: ConfirmOverlay;
 
   private _stage: Stage;
-  private _container: BaseNode;
+  private _container: Node2D;
 
-  constructor(stage: Stage, container: BaseNode) {
+  constructor(stage: Stage, container: Node2D) {
     this._stage = stage;
     this._container = container;
 

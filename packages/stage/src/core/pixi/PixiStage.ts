@@ -1,11 +1,11 @@
 import * as PIXI from 'pixi.js'
 import { gsap } from 'gsap'
 import { PixiPlugin } from 'gsap/PixiPlugin'
-import { DomBaseNode } from '../dom/DomBaseNode'
-import { PixiBaseNode } from './PixiBaseNode'
-import { BaseNode, type NodeProps } from '../base/BaseNode'
+import { DomNode } from '../dom/DomNode'
+import { PixiNode } from './PixiNode'
+import { Node2D, type NodeProps } from '../base/Node2D'
 
-export class PixiStageNode extends DomBaseNode<HTMLCanvasElement> {
+export class PixiStage extends DomNode<HTMLCanvasElement> {
   private _pixiApp: PIXI.Application | null = null
   private _rootContainer: PIXI.Container
 
@@ -45,23 +45,23 @@ export class PixiStageNode extends DomBaseNode<HTMLCanvasElement> {
     this._pixiApp.renderer.render(this._rootContainer)
   }
 
-  protected override _onChildAdded(node: BaseNode<unknown>): void {
-    if (node instanceof PixiBaseNode) {
+  protected override _onChildAdded(node: Node2D<unknown>): void {
+    if (node instanceof PixiNode) {
       this._rootContainer.addChild(node.renderObject)
-    } else if (node instanceof DomBaseNode) {
+    } else if (node instanceof DomNode) {
       super._onChildAdded(node)
     } else {
-      console.error(`Cannot add node of type ${node.type} to PixiStageNode`)
+      console.error(`Cannot add node of type ${node.type} to PixiStage`)
     }
   }
 
-  protected override _onChildRemoved(node: BaseNode<unknown>): void {
-    if (node instanceof PixiBaseNode) {
+  protected override _onChildRemoved(node: Node2D<unknown>): void {
+    if (node instanceof PixiNode) {
       this._rootContainer.removeChild(node.renderObject)
-    } else if (node instanceof DomBaseNode) {
+    } else if (node instanceof DomNode) {
       super._onChildRemoved(node)
     } else {
-      console.error(`Cannot remove node of type ${node.type} from PixiStageNode`)
+      console.error(`Cannot remove node of type ${node.type} from PixiStage`)
     }
   }
 
