@@ -1,35 +1,36 @@
-import { DomNode, Stage, type NodeProps } from "tiny-stage";
+import { DomNode, SceneTree, type NodeProps } from "tiny-stage";
 
 export interface OverlayNodeProps extends Omit<NodeProps, 'type' | 'renderer'> {
-  stage: Stage;
+  sceneTree: SceneTree;
 }
 
-export class OverlayNode extends DomNode {
-  protected stage: Stage
+export abstract class OverlayNode extends DomNode {
+  protected sceneTree: SceneTree
 
   constructor(props: OverlayNodeProps) {
-    const { stage, ...rest } = props;
+    const { sceneTree, ...rest } = props;
     super({
       ...rest,
       type: 'overlay',
       transform: {
-        width: stage.data.width,
-        height: stage.data.height,
-        zIndex: 100,
+        width: sceneTree.data.width,
+        height: sceneTree.data.height,
         opacity: 0,
+        zIndex: 100,
         ...rest.transform
       },
       dom: {
         styles: {
+          backgroundColor: 'rgba(0,0,0,0.5)',
           display: 'none',
-          backgroundColor: 'rgba(0, 0, 0, 0.7)',
-          pointerEvents: 'auto',
           ...rest.dom?.styles
         }
       }
     });
-    this.stage = stage;
+
+    this.sceneTree = sceneTree;
   }
+
 
   async show() {
     this.renderObject.style.display = 'block';

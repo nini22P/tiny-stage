@@ -1,8 +1,10 @@
 export * from './core/base/Node2D'
 export * from './core/dom/DomNode'
 export * from './core/pixi/PixiNode'
-export * from './core/pixi/PixiStage'
-export * from './core/Stage'
+export * from './core/pixi/PixiCanvas'
+export * from './core/scene/SceneTree'
+export * from './core/scene/NodeFactory'
+export * from './core/scene/SceneLoader'
 
 export * from './nodes/DomImageNode'
 export * from './nodes/DomVideoNode'

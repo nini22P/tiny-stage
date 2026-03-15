@@ -1,14 +1,14 @@
-import { type Node2D, type Stage, DomNode } from "tiny-stage";
+import { type Node2D, type SceneTree, DomNode } from "tiny-stage";
 import type { SceneNode, SceneNodeProps } from "../scene/SceneNode";
 
 export class SceneManager {
   private static _instance: SceneManager;
-  private currentScene: SceneNode | null = null;
-  private stage: Stage;
+  private currentScene: SceneNode | undefined = undefined;
+  private sceneTree: SceneTree;
   private container: Node2D;
 
-  constructor(stage: Stage, container: Node2D) {
-    this.stage = stage;
+  constructor(sceneTree: SceneTree, container: Node2D) {
+    this.sceneTree = sceneTree;
     this.container = container;
     SceneManager._instance = this;
   }
@@ -17,12 +17,12 @@ export class SceneManager {
 
   async switch<T extends SceneNode, P extends SceneNodeProps>(
     SceneClass: new (props: P) => T,
-    props: Omit<P, 'stage' | 'container'>
+    props: Omit<P, 'sceneTree' | 'container'>
   ) {
     const oldScene = this.currentScene;
     const newScene = new SceneClass({
       ...props,
-      stage: this.stage,
+      sceneTree: this.sceneTree,
       renderer: 'dom'
     } as unknown as P);
 

@@ -4,7 +4,7 @@ import { DomNode, DomTextNode } from 'tiny-stage';
 
 export class ConfirmOverlay extends OverlayNode {
   private _message: DomTextNode;
-  private _resolvePromise: ((value: boolean) => void) | null = null;
+  private _resolvePromise: ((value: boolean) => void) | undefined = undefined;
 
   constructor(props: OverlayNodeProps) {
     super(props);
@@ -13,12 +13,12 @@ export class ConfirmOverlay extends OverlayNode {
       id: 'confirm-panel',
       type: 'container',
       transform: {
-        x: this.stage.data.width / 2,
-        y: this.stage.data.height / 2,
+        x: this.sceneTree.data.width / 2,
+        y: this.sceneTree.data.height / 2,
         anchorX: 0.5,
         anchorY: 0.5,
-        width: this.stage.data.width / 2,
-        height: this.stage.data.width / 2 * 0.5,
+        width: this.sceneTree.data.width / 2,
+        height: this.sceneTree.data.width / 2 * 0.5,
       },
       dom: {
         styles: {
@@ -34,7 +34,7 @@ export class ConfirmOverlay extends OverlayNode {
       data: { text: '确认文字内容' },
       transform: {
         y: 128,
-        width: this.stage.data.width / 2,
+        width: this.sceneTree.data.width / 2,
         height: 72,
       },
       dom: {
@@ -76,7 +76,7 @@ export class ConfirmOverlay extends OverlayNode {
   private _handleResult(result: boolean) {
     if (this._resolvePromise) {
       this._resolvePromise(result);
-      this._resolvePromise = null;
+      this._resolvePromise = undefined;
     }
     this.hide();
   }

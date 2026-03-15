@@ -31,6 +31,7 @@ export type PixiNodeTransform = Omit<NodeTransform, 'width' | 'height'>
 
 export interface NodeProps<TData = Record<string, unknown>> {
   id: string;
+  name?: string;
   type: string;
   renderer?: 'dom' | 'pixi';
   data?: TData;
@@ -55,6 +56,7 @@ export interface NodeKeyframe extends NodeTransform {
 
 export abstract class Node2D<TData = Record<string, unknown>> {
   public id: string
+  public name: string
   public type: string
   public renderer: 'dom' | 'pixi'
 
@@ -65,11 +67,12 @@ export abstract class Node2D<TData = Record<string, unknown>> {
   public pixiConfig?: PixiConfig
 
   protected _children: Node2D<unknown>[] = []
-  protected _parent: Node2D<unknown> | null = null
+  protected _parent: Node2D<unknown> | undefined = undefined
   protected _isDestroyed = false
 
   constructor(props: NodeProps<TData>) {
     this.id = props.id
+    this.name = props.name ?? props.id
     this.type = props.type
     this.renderer = props.renderer ?? 'dom'
     this.data = (props.data ?? {}) as TData
@@ -127,7 +130,7 @@ export abstract class Node2D<TData = Record<string, unknown>> {
     const index = this._children.indexOf(node)
     if (index !== -1) {
       this._children.splice(index, 1)
-      node._parent = null
+      node._parent = undefined
       this._onChildRemoved(node)
     }
     return this
@@ -136,6 +139,7 @@ export abstract class Node2D<TData = Record<string, unknown>> {
   public serialize(): NodeProps<unknown> {
     return {
       id: this.id,
+      name: this.name,
       type: this.type,
       renderer: this.renderer,
       data: { ...this.data },
@@ -145,6 +149,39 @@ export abstract class Node2D<TData = Record<string, unknown>> {
       children: this._children.map(c => c.serialize())
     }
   }
+
+  public getRoot(): Node2D<unknown> {
+    return this._parent ? this._parent.getRoot() : this
+  }
+
+  public getNode(path: string): Node2D<unknown> | undefined {
+    if (!path || path === '.') return this
+    if (path.startsWith('/')) {
+      return this.getRoot().getNode(path.substring(1))
+    }
+
+    const segments = path.split('/')
+    const first = segments[0]
+    const rest = segments.slice(1).join('/')
+
+    if (first === '..') {
+      const parent = this._parent ?? undefined
+      return rest ? parent?.getNode(rest) : parent
+    }
+
+    if (first === '.') {
+      return rest ? this.getNode(rest) : this
+    }
+
+    const child = this._children.find(c => c.name === first)
+    return rest ? child?.getNode(rest) : child
+  }
+
+  public getPath(): string {
+    const parentPath = this._parent ? this._parent.getPath() : ''
+    return (parentPath === '/' ? '' : parentPath) + '/' + this.name
+  }
+
 
   public isDomNode(): this is DomNode {
     return this.renderer === 'dom'

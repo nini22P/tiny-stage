@@ -5,8 +5,8 @@ import { DomNode } from '../dom/DomNode'
 import { PixiNode } from './PixiNode'
 import { Node2D, type NodeProps } from '../base/Node2D'
 
-export class PixiStage extends DomNode<HTMLCanvasElement> {
-  private _pixiApp: PIXI.Application | null = null
+export class PixiCanvas extends DomNode<HTMLCanvasElement> {
+  private _pixiApp: PIXI.Application | undefined = undefined
   private _rootContainer: PIXI.Container
 
   constructor(props: Omit<NodeProps, 'type' | 'tagName'>) {
@@ -51,7 +51,7 @@ export class PixiStage extends DomNode<HTMLCanvasElement> {
     } else if (node instanceof DomNode) {
       super._onChildAdded(node)
     } else {
-      console.error(`Cannot add node of type ${node.type} to PixiStage`)
+      console.error(`Cannot add node of type ${node.type} to PixiCanvas`)
     }
   }
 
@@ -61,7 +61,7 @@ export class PixiStage extends DomNode<HTMLCanvasElement> {
     } else if (node instanceof DomNode) {
       super._onChildRemoved(node)
     } else {
-      console.error(`Cannot remove node of type ${node.type} from PixiStage`)
+      console.error(`Cannot remove node of type ${node.type} from PixiCanvas`)
     }
   }
 
@@ -69,7 +69,7 @@ export class PixiStage extends DomNode<HTMLCanvasElement> {
     gsap.ticker.remove(this._renderPixi)
     if (this._pixiApp) {
       this._pixiApp.destroy(true, { children: true, texture: true })
-      this._pixiApp = null
+      this._pixiApp = undefined
     }
     super._onDestroy()
   }

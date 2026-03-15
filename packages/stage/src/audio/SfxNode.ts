@@ -89,7 +89,7 @@ export class SfxNode extends HowlNode {
   private _checkMaxConcurrent() {
     if (this._totalActiveCount >= this._maxConcurrent) {
 
-      let oldest: { howlInstance: HowlInstance; sound: SoundInstance } | null = null
+      let oldest: { howlInstance: HowlInstance; sound: SoundInstance } | undefined = undefined
 
       for (const item of this._activeSoundsIterator()) {
         if (!oldest || item.sound.startTime < oldest.sound.startTime) {

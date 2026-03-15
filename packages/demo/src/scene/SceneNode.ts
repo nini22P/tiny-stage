@@ -1,34 +1,34 @@
-import { DomNode, BgmNode, SfxNode, DomImageNode, Stage, type NodeProps } from 'tiny-stage'
+import { DomNode, BgmNode, SfxNode, DomImageNode, SceneTree, type NodeProps } from 'tiny-stage'
 import type { ScriptTransform } from './ScenarioScene'
 
 export interface SceneNodeProps<TData = any> extends Omit<NodeProps<TData>, 'type' | 'renderer'> {
-  stage: Stage;
+  sceneTree: SceneTree;
 }
 
 export abstract class SceneNode<TData = any> extends DomNode<HTMLElement, TData> {
   protected camera: DomNode
   protected bgm: BgmNode
   protected sfx: SfxNode
-  protected stage: Stage
+  protected sceneTree: SceneTree
 
   constructor(props: SceneNodeProps<TData>) {
-    const { stage, ...rest } = props;
+    const { sceneTree, ...rest } = props;
     super({
       ...rest,
       type: 'scene',
       transform: {
-        width: stage.data.width,
-        height: stage.data.height,
+        width: sceneTree.data.width,
+        height: sceneTree.data.height,
         ...rest.transform
       }
     });
 
-    this.stage = stage;
+    this.sceneTree = sceneTree;
 
     this.camera = new DomNode({
       id: `${props.id}-camera`,
       type: 'camera',
-      transform: { width: this.stage.data.width, height: this.stage.data.height }
+      transform: { width: this.sceneTree.data.width, height: this.sceneTree.data.height }
     });
     this.addNode(this.camera);
 
@@ -43,7 +43,7 @@ export abstract class SceneNode<TData = any> extends DomNode<HTMLElement, TData>
   abstract onEnd(): Promise<void>;
 
   protected async waitClick(
-    target: DomNode<any, any> | HTMLElement | Stage = this.stage,
+    target: DomNode<any, any> | HTMLElement | SceneTree = this.sceneTree,
     callback?: () => boolean | void
   ): Promise<void> {
     const element = target instanceof DomNode ? target.renderObject : (target as any);
@@ -68,8 +68,8 @@ export abstract class SceneNode<TData = any> extends DomNode<HTMLElement, TData>
       renderer: 'dom',
       data: { src },
       transform: {
-        x: this.stage.data.width / 2,
-        y: this.stage.data.height / 2,
+        x: this.sceneTree.data.width / 2,
+        y: this.sceneTree.data.height / 2,
         anchorX: 0.5,
         anchorY: 0.5,
         ...transform,

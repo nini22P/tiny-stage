@@ -1,12 +1,12 @@
 import { SplashScene } from './scene/SplashScene';
 import { SceneManager } from './manager/SceneManager';
 import './style.css'
-import { Stage, DomNode } from 'tiny-stage'
+import { SceneTree, DomNode } from 'tiny-stage'
 import { UIManager } from './manager/UIManager';
 import CONFIG from './config/Config';
 
 const run = async () => {
-  const stage = new Stage({
+  const stage = new SceneTree({
     id: 'root',
     container: document.getElementById('app')!,
     data: CONFIG,
